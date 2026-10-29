@@ -6,3 +6,4 @@ cover: https://img.neway.site/2323/2323.png
 # 测试
 
 测试
+![2323](https://img.neway.site/2323/2323.png)
