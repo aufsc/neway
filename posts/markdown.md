@@ -1,11 +1,11 @@
-# markdown
+# Markdown
 cover: https://kkimgs.yisou.com/ims?kt=url&at=ori&key=aHR0cHM6Ly9scmQxMjM0NS5vc3MtY24tYmVpamluZy5hbGl5dW5jcy5jb20vaW1nLzRjOTFlY2I3ZmRkZTYyZTZiMjgyZmNkM2RjN2RiODIyLmpwZw==&sign=yx:4Bmm9LvOOtf3VqRWfmtVKG651yI=&tv=0_0
 2024-07-15
 教程
 md,语法
 # markdown
 
-markdown基础语法及演示
+Markdown基础语法及演示
 
 # Headings
 
