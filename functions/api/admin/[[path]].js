@@ -1,8 +1,8 @@
 /**
  * 管理后台 API 路由（/api/admin/*）。
  *   auth/setup | auth/login | auth/logout | auth/me | auth/password
- *   posts · media · deploy · comments · messages · blocks · commenters · overview   （admin / editor）
- *   users                                                                           （仅 admin）
+ *   posts · media · deploy · comments · messages · blocks · commenters · overview · visits   （admin / editor）
+ *   users                                                                                    （仅 admin）
  */
 import { json, sameOrigin, ensureSchema, ipHashOf, sha256, secretEquals } from "../../_lib/common.js";
 import {
@@ -102,6 +102,7 @@ export async function onRequest(ctx) {
         }
         break;
       case "overview": return await mod.overview(c);
+      case "visits": return await mod.visits(c);
       case "posts": return await content.posts(c);
       case "media": return await content.media(c);
       case "deploy": return await content.deploy(c);

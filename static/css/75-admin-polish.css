@@ -1,0 +1,151 @@
+/* =====================================================================
+   75 管理后台打磨：工具栏 / 按钮 / 列表 / 统计 / 媒体库 / 编辑器 / 响应式
+   在 70-admin.css 之后加载，纯增量覆盖
+   ===================================================================== */
+
+/* ---------- 顶部工具栏 ---------- */
+.adm-top { display: flex; align-items: center; gap: 10px 12px; flex-wrap: wrap; }
+.adm-top h2 { margin-right: auto; letter-spacing: -0.01em; }
+.adm-top > .adm-row, .adm-actions { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; min-width: 0; }
+.adm-top .adm-search { flex: 1 1 160px; min-width: 120px; max-width: 320px; }
+.adm-top .btn { flex: 0 0 auto; }
+
+/* ---------- 按钮 ---------- */
+.btn { min-height: 34px; padding: 7px 16px; gap: 8px; white-space: nowrap; line-height: 1.2; }
+.btn-sm { min-height: 28px; padding: 4px 12px; font-size: 0.8rem; }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn-primary { font-weight: 700; }
+
+/* ---------- 列表与统计卡 ---------- */
+.adm-item { border-radius: 12px; padding: 12px 10px; transition: background var(--transition-fast); }
+.adm-item:hover { background: var(--btn-hover); }
+.adm-item > .adm-row { flex-wrap: nowrap; justify-content: flex-end; }
+.adm-stat { transition: transform 0.18s ease, border-color 0.18s ease; }
+.adm-stat:hover { transform: translateY(-2px); border-color: var(--accent-soft-border); }
+
+/* ---------- 统计页：两列等宽、等高、内部滚动 ---------- */
+.stats-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: stretch; max-width: 1180px; }
+
+/* 卡片：固定高度 + 纵向 flex，标题固定、内容滚动 */
+.stats-grid > .adm-card { display: flex; flex-direction: column; height: min(62vh, 620px); min-height: 320px; overflow: hidden; }
+
+.stats-grid > .adm-card > h3 { flex: 0 0 auto; margin-bottom: 10px; }
+
+/* 内容区独立滚动 */
+.stats-grid > .adm-card > .geo-list,
+.stats-grid > .adm-card > .geo-groups { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 6px; }
+
+/* 细滚动条 */
+.stats-grid > .adm-card > .geo-list::-webkit-scrollbar,
+.stats-grid > .adm-card > .geo-groups::-webkit-scrollbar { width: 6px; }
+.stats-grid > .adm-card > .geo-list::-webkit-scrollbar-thumb,
+.stats-grid > .adm-card > .geo-groups::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 999px; }
+.stats-grid > .adm-card > .geo-list::-webkit-scrollbar-track,
+.stats-grid > .adm-card > .geo-groups::-webkit-scrollbar-track { background: transparent; }
+
+/* 国家行 / 城市分组保持原样 */
+.geo-list { display: flex; flex-direction: column; gap: 10px; }
+.geo-row { display: grid; grid-template-columns: minmax(96px, 170px) minmax(0, 1fr) 60px; gap: 12px; align-items: center; }
+.geo-name { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 0.9rem; }
+.geo-name .geo-cn { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.geo-track { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.geo-track > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+.geo-val { font-family: var(--font-mono); font-size: 0.82rem; color: var(--secondary-text); text-align: right; }
+
+.geo-groups { display: flex; flex-direction: column; gap: 12px; }
+.geo-group { padding: 10px 12px; border-radius: 14px; background: var(--surface-2); }
+.geo-group-hd { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; }
+.geo-group-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.geo-cities { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.geo-cities li { display: flex; justify-content: space-between; gap: 10px; font-size: 0.86rem; }
+.geo-cities li > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 访问明细表 */
+.visit-table { display: flex; flex-direction: column; gap: 2px; max-height: 520px; overflow: auto; }
+.visit-row { display: grid; grid-template-columns: 132px 136px minmax(120px, 1fr) 56px minmax(100px, 1.2fr); gap: 12px; align-items: center; padding: 7px 8px; border-radius: 10px; font-size: 0.84rem; }
+.visit-hd { position: sticky; top: 0; z-index: 1; background: var(--card-bg); font-size: 0.76rem; color: var(--secondary-text); font-weight: 600; }
+.visit-row:not(.visit-hd):hover { background: var(--btn-hover); }
+.visit-row > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.visit-country { display: flex; align-items: center; gap: 8px; }
+.visit-row .visit-path { font-family: var(--font-mono); font-size: 0.8rem; color: var(--secondary-text); }
+
+/* ---------- 媒体库：工具栏 ---------- */
+.media-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.media-toolbar .adm-search { flex: 1 1 200px; max-width: 340px; }
+.media-toolbar .btn { flex: 0 0 auto; }
+
+/* 自定义文件夹下拉 */
+.adm-menu { position: relative; }
+.adm-menu > summary { list-style: none; cursor: pointer; user-select: none; }
+.adm-menu > summary::-webkit-details-marker { display: none; }
+.adm-menu > summary::after { content: "▾"; margin-left: 6px; font-size: 0.75em; opacity: 0.7; }
+.adm-menu[open] > summary { border-color: var(--accent-soft-border); color: var(--link-color); }
+.adm-menu-list { position: absolute; z-index: 30; margin-top: 6px; min-width: 170px; max-height: 280px; overflow: auto; padding: 6px; border-radius: 14px; background: var(--card-bg); border: 1px solid var(--border-color); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28); }
+.adm-menu-item { display: block; width: 100%; padding: 7px 10px; text-align: left; border: 0; border-radius: 10px; background: transparent; color: var(--text-color); font: inherit; font-size: 0.88rem; cursor: pointer; }
+.adm-menu-item:hover { background: var(--btn-hover); }
+.adm-menu-item.on { background: var(--accent-soft); color: var(--link-color); font-weight: 600; }
+
+/* ---------- 媒体库：网格与卡片 ---------- */
+.media-grid { grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 14px; }
+.media-card { position: relative; transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; }
+.media-card:hover { transform: translateY(-2px); border-color: var(--accent-soft-border); box-shadow: 0 12px 28px rgba(20, 30, 70, 0.14); }
+.media-card.checked { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.media-card img { aspect-ratio: 1 / 1; }
+.media-card .info { display: flex; align-items: center; gap: 4px; padding: 8px 10px 10px; font-size: 0.76rem; overflow: hidden; }
+.media-card .info .tag { font-size: 0.68rem; padding: 0 6px; }
+
+/* 选择框 */
+.media-pick { position: absolute; top: 8px; left: 8px; z-index: 3; display: flex; padding: 4px; border-radius: 8px; background: rgba(8, 12, 28, 0.45); backdrop-filter: blur(4px); }
+.media-pick input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+
+/* 悬浮操作层 */
+.media-card .acts { position: absolute; left: 8px; right: 8px; bottom: 8px; gap: 6px; padding: 6px; border-radius: 12px; background: rgba(8, 12, 28, 0.55); backdrop-filter: blur(6px); opacity: 0; transform: translateY(6px); transition: opacity 0.18s ease, transform 0.18s ease; }
+.media-card:hover .acts, .media-card:focus-within .acts { opacity: 1; transform: none; }
+.media-card .acts .btn { flex: 1 1 auto; justify-content: center; min-height: 26px; padding: 3px 10px; font-size: 0.74rem; background: rgba(255, 255, 255, 0.9); color: #1b2340; border-color: transparent; }
+[data-theme="dark"] .media-card .acts .btn { background: rgba(255, 255, 255, 0.14); color: #e7ecff; }
+
+/* 触屏无 hover：操作常显 */
+@media (hover: none) {
+    .media-card .acts { position: static; opacity: 1; transform: none; padding: 4px 8px 10px; background: transparent; backdrop-filter: none; }
+    .media-card .acts .btn { background: var(--glass-soft); color: var(--text-color); }
+}
+
+/* 上传按钮：右下角 */
+.media-foot { display: flex; justify-content: flex-end; margin-top: 16px; }
+.media-upload { min-height: 38px; padding: 9px 24px; font-size: 0.92rem; }
+
+/* ---------- 编辑器 ---------- */
+.ed-bar { position: sticky; top: 58px; z-index: 10; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 8px; border-radius: 14px; background: var(--glass-soft); border: 1px solid var(--glass-edge); backdrop-filter: blur(10px); }
+.ed-text { min-height: clamp(320px, 58vh, 720px); }
+.ed-split.preview .ed-prev { position: sticky; top: 116px; align-self: start; }
+.ed-title { font-size: 1.5rem; padding: 12px 16px; }
+.cover-prev { max-height: 220px; }
+
+/* ---------- 窄屏 ---------- */
+@media (max-width: 900px) {
+    .stats-grid { grid-template-columns: 1fr; max-width: none; }
+    .stats-grid > .adm-card > .geo-list,
+    .stats-grid > .adm-card > .geo-groups { overflow: visible; padding-right: 0; }
+}
+
+@media (max-width: 720px) {
+    .adm-top { flex-direction: column; align-items: stretch; gap: 8px; }
+    .adm-top h2 { margin-right: 0; }
+    .adm-top > .adm-row, .adm-actions { flex-wrap: wrap; width: 100%; }
+    .adm-top .btn { flex: 1 1 auto; }
+
+    .media-toolbar { flex-direction: column; align-items: stretch; }
+    .media-toolbar .btn, .media-toolbar .adm-search, .adm-menu { width: 100%; max-width: none; }
+    .adm-menu-list { position: static; margin-top: 6px; }
+    .media-foot { justify-content: stretch; }
+    .media-upload { width: 100%; }
+
+    .ed-bar { position: static; }
+    .ed-bar .btn { flex: 1 1 45%; }
+
+    .media-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+    .adm-card { padding: 14px; border-radius: 18px; }
+
+    .geo-row { grid-template-columns: minmax(84px, 120px) minmax(0, 1fr) 52px; gap: 8px; }
+    .visit-row { grid-template-columns: 1fr 1fr; row-gap: 6px; }
+    .visit-hd { display: none; }
+}

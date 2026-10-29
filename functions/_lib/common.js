@@ -58,6 +58,42 @@ export async function ipHashOf(request, env) {
   return ip ? sha1((env.IP_SALT || "") + ip) : "";
 }
 
+/** 归属地（Cloudflare request.cf），不涉及 IP */
+export function geoOf(request) {
+  const cf = request.cf || {};
+  return {
+    country: cf.country || "",
+    region: cf.region || "",
+    city: cf.city || "",
+    asn: cf.asn ? Number(cf.asn) : 0,
+    org: cf.asOrganization || "",
+  };
+}
+
+/** 累加来源计数 + 写一条访问明细（不存 IP） */
+export async function recordGeo(db, request, meta = {}) {
+  const g = geoOf(request);
+  if (!g.country && !g.city) return;                // 本地开发没有 request.cf
+  const now = Date.now();
+  try {
+    await db.prepare(
+      `INSERT INTO geo_stats (country, region, city, asn, org, hits, last_seen)
+       VALUES (?, ?, ?, ?, ?, 1, ?)
+       ON CONFLICT(country, region, city, asn) DO UPDATE SET
+         hits = geo_stats.hits + 1, last_seen = excluded.last_seen`
+    ).bind(g.country, g.region, g.city, g.asn, g.org, now).run();
+
+    await db.prepare(
+      "INSERT INTO visit_log (created_at, country, region, city, path, kind) VALUES (?, ?, ?, ?, ?, ?)"
+    ).bind(now, g.country, g.region, g.city, String(meta.path || "").slice(0, 190), String(meta.kind || "hit").slice(0, 16)).run();
+
+    // 只保留最近 5000 条，避免无限增长
+    if (Math.random() < 0.02) {
+      await db.prepare("DELETE FROM visit_log WHERE id <= (SELECT MAX(id) - 5000 FROM visit_log)").run();
+    }
+  } catch (e) { /* 统计失败不影响主流程 */ }
+}
+
 export const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -90,11 +126,23 @@ export async function ensureSchema(db) {
     db.prepare(`CREATE TABLE IF NOT EXISTS media (
       id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, type TEXT NOT NULL,
       size INTEGER NOT NULL, created_at INTEGER NOT NULL, admin_id INTEGER)`),
+    db.prepare("CREATE TABLE IF NOT EXISTS media_dirs (name TEXT PRIMARY KEY, created_at INTEGER NOT NULL)"),
     db.prepare(`CREATE TABLE IF NOT EXISTS blocks (
       id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT NOT NULL, value TEXT NOT NULL, note TEXT,
       created_at INTEGER NOT NULL, UNIQUE(kind, value))`),
     db.prepare(`CREATE TABLE IF NOT EXISTS post_index (
       name TEXT PRIMARY KEY, sha TEXT, title TEXT, date TEXT, category TEXT, tags TEXT, cover TEXT, updated_at INTEGER)`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS geo_stats (
+      country TEXT NOT NULL DEFAULT '', region TEXT NOT NULL DEFAULT '',
+      city TEXT NOT NULL DEFAULT '', asn INTEGER NOT NULL DEFAULT 0,
+      org TEXT NOT NULL DEFAULT '', hits INTEGER NOT NULL DEFAULT 0,
+      last_seen INTEGER NOT NULL, PRIMARY KEY (country, region, city, asn))`),
+    db.prepare("CREATE INDEX IF NOT EXISTS idx_geo_hits ON geo_stats (hits DESC)"),
+    db.prepare(`CREATE TABLE IF NOT EXISTS visit_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, created_at INTEGER NOT NULL,
+      country TEXT NOT NULL DEFAULT '', region TEXT NOT NULL DEFAULT '', city TEXT NOT NULL DEFAULT '',
+      path TEXT NOT NULL DEFAULT '', kind TEXT NOT NULL DEFAULT 'hit')`),
+    db.prepare("CREATE INDEX IF NOT EXISTS idx_visit_time ON visit_log (created_at DESC)"),
   ]);
   // 兼容旧库：缺列时补列（已存在会报错，忽略即可）
   for (const sql of [
@@ -105,7 +153,7 @@ export async function ensureSchema(db) {
     "ALTER TABLE comments ADD COLUMN is_owner INTEGER NOT NULL DEFAULT 0",
     "ALTER TABLE comments ADD COLUMN status INTEGER NOT NULL DEFAULT 0", // 0 公开 1 隐藏 2 待审核
   ]) {
-    try { await db.prepare(sql).run(); } catch (e) {}
+    try { await db.prepare(sql).run(); } catch (e) { }
   }
   ready = true;
 }

@@ -16,6 +16,7 @@ bucket_name = "blog-media"
 [vars]
 SITE_NAME = "new way"                  # 通知邮件里的站名
 OWNER_NAME = "newey"                     # 站主评论显示名
+MEDIA_BASE = "https://img.xxxx.xx"     # 自定域图片地址
 # 注意：MAIL_FROM / NOTIFY_EMAIL / CONTACT_TO（你的真实邮箱）不要写在这里——仓库公开时会被爬取。
 # 请在 Cloudflare 的 Variables and Secrets 里以 Secret 类型添加（见 DEPLOY.md 第 12 章）。
 GITHUB_REPO = "aufsc/neway"      # 管理后台把文章提交到这个仓库

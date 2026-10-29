@@ -1,4 +1,4 @@
-/** 管理后台：评论 · 联系留言 · 黑名单 · 评论者 · 管理员账号 · 概览 */
+/** 管理后台：评论 · 联系留言 · 黑名单 · 评论者 · 管理员账号 · 概览 · 访问明细 */
 import { json, cleanMail } from "./common.js";
 import { HttpError, ok, readJson, hashPassword, validUsername, validPassword, destroySessions } from "./auth.js";
 import { notifyComment } from "./notify.js";
@@ -198,7 +198,7 @@ export async function users({ request, env, admin, parts }) {
   throw new HttpError(405, "method not allowed");
 }
 
-// ------------------------------------------------------------------ 概览
+// ------------------------------------------------------------------ 概览（含归属地聚合）
 export async function overview({ env }) {
   const db = env.DB;
   const n = async (sql) => (await db.prepare(sql).first()).n;
@@ -206,6 +206,25 @@ export async function overview({ env }) {
   const st = Object.fromEntries(stats.results.map((r) => [r.k, r.v]));
   const recent = await db.prepare("SELECT id, path, name, body, created_at, status FROM comments ORDER BY id DESC LIMIT 5").all();
   const media = await db.prepare("SELECT COUNT(*) AS n, COALESCE(SUM(size),0) AS bytes FROM media").first();
+
+  let geo = { countries: [], cities: [] };
+  try {
+    const countries = await db.prepare(
+      "SELECT country, SUM(hits) AS hits FROM geo_stats GROUP BY country ORDER BY hits DESC LIMIT 12"
+    ).all();
+    const cities = await db.prepare(
+      `SELECT country, region, city, SUM(hits) AS hits
+         FROM geo_stats
+        WHERE city != ''
+        GROUP BY country, region, city
+        ORDER BY hits DESC
+        LIMIT 60`
+    ).all();
+    geo = { countries: countries.results, cities: cities.results };
+  } catch (e) {
+    console.error("[overview] geo_stats 查询失败：", e && e.message);
+  }
+
   return json({
     pv: st.pv || 0, uv: st.uv || 0,
     comments: await n("SELECT COUNT(*) AS n FROM comments"),
@@ -213,5 +232,18 @@ export async function overview({ env }) {
     hidden: await n("SELECT COUNT(*) AS n FROM comments WHERE status = 1"),
     messages: await n("SELECT COUNT(*) AS n FROM messages"),
     media: media.n, mediaBytes: media.bytes, recent: recent.results,
+    geo,
   });
+}
+
+// ------------------------------------------------------------------ 访问明细
+export async function visits({ request, env }) {
+  const url = new URL(request.url);
+  const per = Math.min(Math.max(parseInt(url.searchParams.get("per") || "50", 10) || 50, 1), 200);
+  const p = Math.max(parseInt(url.searchParams.get("page") || "1", 10) || 1, 1);
+  const { results } = await env.DB.prepare(
+    "SELECT id, created_at, country, region, city, path, kind FROM visit_log ORDER BY id DESC LIMIT ? OFFSET ?"
+  ).bind(per, (p - 1) * per).all();
+  const total = await env.DB.prepare("SELECT COUNT(*) AS n FROM visit_log").first();
+  return json({ items: results, total: total.n, per });
 }

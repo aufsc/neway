@@ -34,7 +34,6 @@ export async function posts({ request, env, admin, parts }) {
     return json({ posts: list });
   }
 
-  // 补全索引：每次最多取 30 篇（Workers 子请求数有限）
   if (request.method === "POST" && name === "sync") {
     const files = await listPosts(env);
     const { results } = await db.prepare("SELECT name, sha FROM post_index").all();
@@ -72,43 +71,184 @@ export async function posts({ request, env, admin, parts }) {
 
 // ------------------------------------------------------------------ 媒体库（R2）
 const TYPES = { "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp", "image/avif": "avif", "image/svg+xml": "svg" };
-const slug = (s) => s.replace(/\.[^.]+$/, "").toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "img";
+
+const slugSeg = (s) => String(s || "")
+  .replace(/\.[^.]+$/, "")
+  .toLowerCase()
+  .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, "-")
+  .replace(/^-+|-+$/g, "")
+  .slice(0, 40);
+
+const mediaBase = (env) => String(env.MEDIA_BASE || "").replace(/\/+$/, "");
+const mediaUrl = (env, key) => (mediaBase(env) ? `${mediaBase(env)}/${key}` : `/media/${key}`);
+
+function splitPath(raw) {
+  const segs = String(raw || "").replace(/\\/g, "/").split("/").filter(Boolean);
+  const base = segs.pop() || "img";
+  const dir = segs.map(slugSeg).filter(Boolean).join("/");
+  return { dir, base: slugSeg(base) || "img" };
+}
+
+async function keyTaken(db, key) {
+  return !!(await db.prepare("SELECT 1 AS x FROM media WHERE key = ?").bind(key).first());
+}
+
+async function moveKey(env, db, oldKey, newKey) {
+  if (oldKey === newKey) return oldKey;
+  const obj = await env.MEDIA.get(oldKey);
+  if (!obj) throw new HttpError(404, `R2 中找不到 ${oldKey}`);
+  await env.MEDIA.put(newKey, await obj.arrayBuffer(), { httpMetadata: obj.httpMetadata });
+  await env.MEDIA.delete(oldKey);
+  await db.prepare("UPDATE media SET key = ? WHERE key = ?").bind(newKey, oldKey).run();
+  return newKey;
+}
 
 export async function media({ request, env, admin, parts }) {
   if (!env.MEDIA) throw new HttpError(503, "未绑定 R2 存储桶（变量名需为 MEDIA）");
   const db = env.DB;
-  const id = Number(parts[1]) || 0;
+  const seg = parts[1] || "";
+  const id = Number(seg) || 0;
+  const url = new URL(request.url);
 
-  if (request.method === "GET") {
-    const url = new URL(request.url);
-    const q = (url.searchParams.get("q") || "").trim();
-    const page = Math.max(parseInt(url.searchParams.get("page") || "1", 10) || 1, 1);
-    const per = 40;
-    const where = q ? "WHERE name LIKE ?" : "";
-    const args = q ? [`%${q}%`] : [];
-    const { results } = await db.prepare(`SELECT id, key, name, type, size, created_at FROM media ${where} ORDER BY id DESC LIMIT ? OFFSET ?`)
-      .bind(...args, per, (page - 1) * per).all();
-    const total = await db.prepare(`SELECT COUNT(*) AS n FROM media ${where}`).bind(...args).first();
-    return json({ items: results.map((m) => ({ ...m, url: `/media/${m.key}` })), total: total.n, per });
+  // ---------------------------------------------------------------- 文件夹
+  if (seg === "dirs") {
+    const dir = decodeURIComponent(parts[2] || "").split("/").map(slugSeg).filter(Boolean).join("/");
+
+    if (request.method === "GET") {
+      const a = (await db.prepare("SELECT name FROM media_dirs ORDER BY name").all()).results.map((r) => r.name);
+      const b = (await db.prepare(
+        "SELECT DISTINCT substr(key, 1, instr(key, '/') - 1) AS d FROM media WHERE instr(key, '/') > 0 ORDER BY d"
+      ).all()).results.map((r) => r.d);
+      return json({ items: [...new Set([...a, ...b])].sort() });
+    }
+
+    if (request.method === "POST") {
+      const body = await readJson(request);
+      const name = String(body.name || "").split("/").map(slugSeg).filter(Boolean).join("/");
+      if (!name) throw new HttpError(400, "文件夹名不能为空");
+      await db.prepare("INSERT OR IGNORE INTO media_dirs (name, created_at) VALUES (?, ?)").bind(name, Date.now()).run();
+      return ok({ name });
+    }
+
+    if (request.method === "PATCH") {
+      if (!dir) throw new HttpError(400, "缺少原文件夹");
+      const body = await readJson(request);
+      const next = String(body.name || "").split("/").map(slugSeg).filter(Boolean).join("/");
+      if (!next) throw new HttpError(400, "新文件夹名不能为空");
+      if (next === dir) return ok({ moved: 0 });
+      const rows = (await db.prepare("SELECT key FROM media WHERE key LIKE ?").bind(`${dir}/%`).all()).results;
+      for (const r of rows) await moveKey(env, db, r.key, `${next}/${r.key.slice(dir.length + 1)}`);
+      await db.prepare("UPDATE media_dirs SET name = ? WHERE name = ?").bind(next, dir).run();
+      return ok({ moved: rows.length });
+    }
+
+    if (request.method === "DELETE") {
+      if (!dir) throw new HttpError(400, "缺少文件夹");
+      const n = (await db.prepare("SELECT COUNT(*) AS n FROM media WHERE key LIKE ?").bind(`${dir}/%`).first()).n;
+      if (n > 0) throw new HttpError(409, "文件夹里还有图片，先清空");
+      await db.prepare("DELETE FROM media_dirs WHERE name = ?").bind(dir).run();
+      return ok();
+    }
+    throw new HttpError(405, "method not allowed");
   }
 
-  if (request.method === "POST") {
+  // ---------------------------------------------------------------- 批量
+  if (seg === "bulk" && request.method === "POST") {
+    const body = await readJson(request);
+    const list = Array.isArray(body.ids) ? body.ids.map(Number).filter((n) => n > 0).slice(0, 200) : [];
+    if (!list.length) throw new HttpError(400, "no ids");
+    if (body.action !== "delete") throw new HttpError(400, "bad action");
+    const marks = list.map(() => "?").join(",");
+    const rows = await db.prepare(`SELECT key FROM media WHERE id IN (${marks})`).bind(...list).all();
+    for (const r of rows.results) await env.MEDIA.delete(r.key);
+    await db.prepare(`DELETE FROM media WHERE id IN (${marks})`).bind(...list).run();
+    return ok({ count: rows.results.length });
+  }
+
+  // ---------------------------------------------------------------- 列表
+  if (request.method === "GET") {
+    const q = (url.searchParams.get("q") || "").trim();
+    const dir = (url.searchParams.get("dir") || "").trim().replace(/^\/+|\/+$/g, "");
+    const page = Math.max(parseInt(url.searchParams.get("page") || "1", 10) || 1, 1);
+    const per = 40;
+
+    const w = [], a = [];
+    if (q) { w.push("(name LIKE ? OR key LIKE ?)"); a.push(`%${q}%`, `%${q}%`); }
+    if (dir) { w.push("key LIKE ?"); a.push(`${dir}/%`); }
+    const where = w.length ? "WHERE " + w.join(" AND ") : "";
+
+    const { results } = await db.prepare(
+      `SELECT id, key, name, type, size, created_at FROM media ${where} ORDER BY key ASC LIMIT ? OFFSET ?`
+    ).bind(...a, per, (page - 1) * per).all();
+    const total = await db.prepare(`SELECT COUNT(*) AS n FROM media ${where}`).bind(...a).first();
+
+    const fromKeys = (await db.prepare(
+      "SELECT DISTINCT substr(key, 1, instr(key, '/') - 1) AS d FROM media WHERE instr(key, '/') > 0 ORDER BY d"
+    ).all()).results.map((r) => r.d);
+    const declared = (await db.prepare("SELECT name FROM media_dirs ORDER BY name").all()).results.map((r) => r.name);
+
+    return json({
+      items: results.map((m) => ({ ...m, url: mediaUrl(env, m.key) })),
+      total: total.n, per,
+      folders: [...new Set([...fromKeys, ...declared])].sort(),
+    });
+  }
+
+  // ---------------------------------------------------------------- 上传
+  if (request.method === "POST" && !id) {
     const form = await request.formData();
     const file = form.get("file");
     if (!file || typeof file === "string") throw new HttpError(400, "no file");
+    const custom = String(form.get("name") || "").trim();
+
     const max = (parseInt(env.MEDIA_MAX_MB || "10", 10) || 10) * 1048576;
     const type = (file.type || "").toLowerCase();
     if (!TYPES[type]) throw new HttpError(415, "仅支持 jpg / png / gif / webp / avif / svg");
     if (file.size > max) throw new HttpError(413, `文件超过 ${max / 1048576} MB`);
-    const d = new Date();
-    const rand = [...crypto.getRandomValues(new Uint8Array(4))].map((b) => b.toString(16).padStart(2, "0")).join("");
-    const key = `${d.getUTCFullYear()}/${String(d.getUTCMonth() + 1).padStart(2, "0")}/${rand}-${slug(file.name || "img")}.${TYPES[type]}`;
+
+    const ext = TYPES[type];
+    const { dir, base } = splitPath(custom || file.name || "img");
+    const prefix = dir ? `${dir}/` : "";
+
+    let key = `${prefix}${base}.${ext}`;
+    for (let n = 2; await keyTaken(db, key); n++) {
+      if (n > 99) throw new HttpError(409, "同名文件过多，请换个名字");
+      key = `${prefix}${base}-${n}.${ext}`;
+    }
+
     await env.MEDIA.put(key, await file.arrayBuffer(), { httpMetadata: { contentType: type } });
+    const display = `${base}.${ext}`;
     const r = await db.prepare("INSERT INTO media (key, name, type, size, created_at, admin_id) VALUES (?, ?, ?, ?, ?, ?)")
-      .bind(key, (file.name || "img").slice(0, 120), type, file.size, Date.now(), admin.id).run();
-    return json({ item: { id: r.meta.last_row_id, key, name: file.name, type, size: file.size, url: `/media/${key}` } }, 201);
+      .bind(key, display, type, file.size, Date.now(), admin.id).run();
+    if (dir) await db.prepare("INSERT OR IGNORE INTO media_dirs (name, created_at) VALUES (?, ?)").bind(dir, Date.now()).run();
+
+    return json({ item: { id: r.meta.last_row_id, key, name: display, type, size: file.size, url: mediaUrl(env, key) } }, 201);
   }
 
+  // ---------------------------------------------------------------- 改名 / 移动
+  if (request.method === "PATCH" && id) {
+    const body = await readJson(request);
+    const row = await db.prepare("SELECT id, key, name FROM media WHERE id = ?").bind(id).first();
+    if (!row) throw new HttpError(404, "not found");
+
+    let nextKey = row.key;
+    if (body.key) {
+      const { dir, base } = splitPath(String(body.key));
+      const ext = row.key.split(".").pop();
+      nextKey = `${dir ? dir + "/" : ""}${base}.${ext}`;
+      if (nextKey !== row.key) {
+        if (await keyTaken(db, nextKey)) throw new HttpError(409, "目标路径已存在");
+        nextKey = await moveKey(env, db, row.key, nextKey);
+        if (dir) await db.prepare("INSERT OR IGNORE INTO media_dirs (name, created_at) VALUES (?, ?)").bind(dir, Date.now()).run();
+      }
+    }
+
+    const display = String(body.name || row.name).trim().slice(0, 120) || row.name;
+    await db.prepare("UPDATE media SET key = ?, name = ? WHERE id = ?").bind(nextKey, display, id).run();
+    return ok({ key: nextKey, url: mediaUrl(env, nextKey) });
+  }
+
+  // ---------------------------------------------------------------- 删除
   if (request.method === "DELETE" && id) {
     const row = await db.prepare("SELECT key FROM media WHERE id = ?").bind(id).first();
     if (!row) throw new HttpError(404, "not found");
@@ -116,6 +256,7 @@ export async function media({ request, env, admin, parts }) {
     await db.prepare("DELETE FROM media WHERE id = ?").bind(id).run();
     return ok();
   }
+
   throw new HttpError(405, "method not allowed");
 }
 

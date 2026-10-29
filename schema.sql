@@ -48,6 +48,10 @@ CREATE TABLE IF NOT EXISTS media (
   id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT NOT NULL UNIQUE, name TEXT NOT NULL, type TEXT NOT NULL,
   size INTEGER NOT NULL, created_at INTEGER NOT NULL, admin_id INTEGER
 );
+CREATE TABLE IF NOT EXISTS media_dirs (
+  name       TEXT PRIMARY KEY,
+  created_at INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS blocks (
   id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT NOT NULL, value TEXT NOT NULL, note TEXT,
   created_at INTEGER NOT NULL, UNIQUE(kind, value)
@@ -55,5 +59,27 @@ CREATE TABLE IF NOT EXISTS blocks (
 CREATE TABLE IF NOT EXISTS post_index (
   name TEXT PRIMARY KEY, sha TEXT, title TEXT, date TEXT, category TEXT, tags TEXT, cover TEXT, updated_at INTEGER
 );
+CREATE TABLE IF NOT EXISTS geo_stats (
+  country   TEXT    NOT NULL DEFAULT '',
+  region    TEXT    NOT NULL DEFAULT '',
+  city      TEXT    NOT NULL DEFAULT '',
+  asn       INTEGER NOT NULL DEFAULT 0,
+  org       TEXT    NOT NULL DEFAULT '',
+  hits      INTEGER NOT NULL DEFAULT 0,
+  last_seen INTEGER NOT NULL,
+  PRIMARY KEY (country, region, city, asn)
+);
+CREATE INDEX IF NOT EXISTS idx_geo_hits ON geo_stats (hits DESC);
+
+CREATE TABLE IF NOT EXISTS visit_log (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at INTEGER NOT NULL,
+  country    TEXT NOT NULL DEFAULT '',
+  region     TEXT NOT NULL DEFAULT '',
+  city       TEXT NOT NULL DEFAULT '',
+  path       TEXT NOT NULL DEFAULT '',
+  kind       TEXT NOT NULL DEFAULT 'hit'   -- hit | comment | message
+);
+CREATE INDEX IF NOT EXISTS idx_visit_time ON visit_log (created_at DESC);
 -- 旧库升级（已有 comments 表时执行一次；重复执行会报 duplicate column，可忽略）：
 -- ALTER TABLE comments ADD COLUMN status INTEGER NOT NULL DEFAULT 0;

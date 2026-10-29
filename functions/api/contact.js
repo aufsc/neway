@@ -5,7 +5,7 @@
  * 流程：校验 → 蜜罐/限速 → 写入 D1（不丢信）→ 发邮件给站长（reply-to=访客邮箱）+ 机器人通知。
  * 邮件与机器人都没配置 / 都失败时返回 502，前端会提示改用邮件客户端；留言仍保存在 D1 的 messages 表。
  */
-import { json, cleanMail, sameOrigin, ipHashOf, ensureSchema, isBlocked, NAME_MAX } from "../_lib/common.js";
+import { json, cleanMail, sameOrigin, ipHashOf, ensureSchema, isBlocked, NAME_MAX, recordGeo } from "../_lib/common.js";
 import { notifyMessage } from "../_lib/notify.js";
 
 const BODY_MAX = 3000;
@@ -51,6 +51,8 @@ export async function onRequest({ request, env }) {
       .prepare("INSERT INTO messages (name, email, subject, body, created_at, ip_hash) VALUES (?, ?, ?, ?, ?, ?)")
       .bind(name, email, subject, body, now, ipHash)
       .run();
+
+    await recordGeo(db, request, { path: "/contact", kind: "message" });
 
     const { mailed, bots } = await notifyMessage(env, { name, email, subject, body });
     const notified = mailed || (Array.isArray(bots) && bots.length > 0);   // 任一渠道成功即算已通知

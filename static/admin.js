@@ -1,4 +1,4 @@
-/* 管理后台（/admin）：登录 · 概览 · 文章（GitHub）· 媒体库（R2）· 评论 · 留言 · 用户
+/* 管理后台（/admin）：登录 · 概览 · 统计 · 文章（GitHub）· 媒体库（R2）· 评论 · 留言 · 用户
  * 所有来自用户的内容都通过 textContent / DOM API 渲染，不使用 innerHTML（预览除外：经 DOMPurify 净化）。
  */
 (() => {
@@ -24,6 +24,9 @@
     const $ = (s, el = document) => el.querySelector(s);
     const fmtTime = ms => { if (!ms) return '—'; const d = new Date(Number(ms)), p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; };
     const fmtSize = n => n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(1) + ' KB' : (n / 1048576).toFixed(1) + ' MB';
+
+    const regionName = code => { try { return new Intl.DisplayNames(['zh-CN'], { type: 'region' }).of(code) || code; } catch (e) { return code || '未知'; } };
+
     const today = () => new Date().toISOString().slice(0, 10);
 
     function toast(msg, err) {
@@ -100,7 +103,7 @@
     }
 
     // ================================================================ 外壳与路由
-    const NAV = [['overview', '概览'], ['posts', '文章'], ['media', '媒体库'], ['comments', '评论'], ['messages', '留言'], ['users', '用户']];
+    const NAV = [['overview', '概览'], ['stats', '统计'], ['posts', '文章'], ['comments', '评论'], ['messages', '留言'], ['users', '用户'], ['media', '媒体库']];
 
     function shell() {
         const main = h('main', { class: 'adm-main', id: 'view' });
@@ -117,7 +120,6 @@
                     h('button', { class: 'btn btn-sm', type: 'button', on: { click: passwordDialog } }, '改密码'),
                     h('button', { class: 'btn btn-sm', type: 'button', on: { click: async () => { await run(() => api('POST', 'auth/logout')); me = null; boot(); } } }, '退出'))));
         app.replaceChildren(h('div', { class: 'adm-shell' }, side, main));
-        // 主题按钮（动态创建，main.js 不会绑定它，这里自行处理）
         $('#admTheme', side).addEventListener('click', () => {
             const root = document.documentElement, next = root.dataset.theme === 'dark' ? 'light' : 'dark';
             root.dataset.theme = next; try { localStorage.setItem('theme', next); } catch (e) {}
@@ -146,7 +148,7 @@
         document.querySelectorAll('.adm-nav a').forEach(a => a.classList.toggle('on', a.dataset.k === view));
         const main = $('#view');
         main.replaceChildren(h('p', { class: 'adm-boot' }, '加载中…'));
-        const views = { overview: viewOverview, posts: viewPosts, media: viewMedia, comments: viewComments, messages: viewMessages, users: viewUsers };
+        const views = { overview: viewOverview, stats: viewStats, posts: viewPosts, media: viewMedia, comments: viewComments, messages: viewMessages, users: viewUsers };
         (views[view] || viewOverview)(main, rest.map(decodeURIComponent)).catch(e => main.replaceChildren(h('p', { class: 'adm-empty' }, '加载失败：' + e.message)));
     }
     window.addEventListener('hashchange', route);
@@ -172,6 +174,78 @@
                     h('div', null, h('div', { class: 't' }, c.name, ' ', c.status === 2 ? h('span', { class: 'tag warn' }, '待审核') : c.status === 1 ? h('span', { class: 'tag bad' }, '已隐藏') : null),
                         h('div', { class: 'm' }, h('span', null, c.body.slice(0, 80)), h('span', null, c.path), h('span', null, fmtTime(c.created_at)))),
                     h('a', { class: 'btn btn-sm', href: '#/comments' }, '去处理')))) : h('p', { class: 'adm-empty' }, '还没有评论')));
+    }
+
+    // ================================================================ 统计
+    async function viewStats(main) {
+        const [d, v] = await Promise.all([
+            api('GET', 'overview'),
+            api('GET', 'visits?per=50').catch(() => ({ items: [], total: 0 })),
+        ]);
+        const stat = (n, l) => glass('adm-stat', h('strong', null, Number(n).toLocaleString('en-US')), h('span', null, l));
+        const geo = d.geo || { countries: [], cities: [] };
+
+        const codeBadge = code => h('span', { class: 'geo-code' }, (code || '--').toUpperCase().slice(0, 2));
+        const num = n => Number(n || 0).toLocaleString('en-US');
+        const maxHits = Math.max(1, ...geo.countries.map(c => Number(c.hits || 0)));
+
+        const byCountry = new Map();
+        for (const c of geo.cities) {
+            if (!byCountry.has(c.country)) byCountry.set(c.country, []);
+            byCountry.get(c.country).push(c);
+        }
+        const order = [...geo.countries.map(c => c.country), ...byCountry.keys()]
+            .filter((val, i, a) => val && a.indexOf(val) === i);
+
+        const countriesCard = glass('adm-card',
+            h('h3', null, '国家 / 地区'),
+            geo.countries.length
+                ? h('div', { class: 'geo-list' }, geo.countries.map(c => h('div', { class: 'geo-row' },
+                    h('div', { class: 'geo-name' }, codeBadge(c.country), h('span', { class: 'geo-cn' }, regionName(c.country) || '未知')),
+                    h('div', { class: 'geo-track' }, h('span', { style: `width:${Math.max(2, Math.round(Number(c.hits) / maxHits * 100))}%` })),
+                    h('div', { class: 'geo-val' }, num(c.hits)))))
+                : h('p', { class: 'adm-empty' }, '还没有来源数据'));
+
+        const cityCard = glass('adm-card',
+            h('h3', null, '城市分布（按国家）'),
+            geo.cities.length
+                ? h('div', { class: 'geo-groups' }, order.map(k => {
+                    const list = (byCountry.get(k) || []).slice(0, 6);
+                    if (!list.length) return null;
+                    const row = geo.countries.find(c => c.country === k);
+                    return h('div', { class: 'geo-group' },
+                        h('div', { class: 'geo-group-hd' },
+                            h('span', { class: 'geo-group-name' }, codeBadge(k), h('span', null, regionName(k) || k)),
+                            h('span', { class: 'adm-muted' }, row ? `${num(row.hits)} 次` : '')),
+                        h('ul', { class: 'geo-cities' }, list.map(c => h('li', null,
+                            h('span', null, [c.city, c.region].filter(Boolean).join(' · ') || '未知'),
+                            h('span', { class: 'adm-muted' }, `${num(c.hits)} 次`)))));
+                }).filter(Boolean))
+                : h('p', { class: 'adm-empty' }, '还没有城市数据'));
+
+        const kindLabel = k => ({ hit: '浏览', comment: '评论', message: '留言' }[k] || k);
+
+        const visitsCard = glass('adm-card',
+            h('h3', null, `最近访问（${num(v.total)} 条记录）`),
+            v.items.length
+                ? h('div', { class: 'visit-table' },
+                    h('div', { class: 'visit-row visit-hd' },
+                        h('span', null, '时间'), h('span', null, '国家'), h('span', null, '地区 / 城市'), h('span', null, '类型'), h('span', null, '页面')),
+                    ...v.items.map(it => h('div', { class: 'visit-row' },
+                        h('span', null, fmtTime(it.created_at)),
+                        h('span', { class: 'visit-country' }, codeBadge(it.country), h('span', null, regionName(it.country) || '未知')),
+                        h('span', null, [it.city, it.region].filter(Boolean).join(' · ') || '—'),
+                        h('span', null, kindLabel(it.kind)),
+                        h('span', { class: 'visit-path', title: it.path }, it.path || '—'))))
+                : h('p', { class: 'adm-empty' }, '还没有访问明细'));
+
+        main.replaceChildren(
+            h('div', { class: 'adm-top' }, h('h2', null, '统计')),
+            h('div', { class: 'adm-stats' },
+                stat(d.pv, '访问量'), stat(d.uv, '访客'), stat(d.comments, '评论'),
+                stat(d.messages, '留言'), stat(d.media, '图片 · ' + fmtSize(d.mediaBytes))),
+            h('div', { class: 'stats-grid' }, countriesCard, cityCard),
+            visitsCard);
     }
 
     // ================================================================ 文章
@@ -208,7 +282,8 @@
         q.addEventListener('input', draw); draw();
         main.replaceChildren(
             h('div', { class: 'adm-top' }, h('h2', null, '文章'),
-                h('div', { class: 'adm-row' }, q,
+                h('div', { class: 'adm-row adm-actions' },
+                    q,
                     stale ? h('button', { class: 'btn', type: 'button', on: { click: async () => { const r = await run(() => api('POST', 'posts/sync'), '索引已更新'); if (r) route(); } } }, '同步标题索引') : null,
                     h('a', { class: 'btn btn-primary', href: '#/posts/new' }, '新建文章'))),
             glass('adm-card', list),
@@ -316,10 +391,19 @@
     }
 
     // ================================================================ 媒体库
-    async function uploadFiles(files) {
+    let currentDir = '';
+
+    async function uploadFiles(files, dirHint) {
         const out = [];
+        const dir = String(dirHint ?? currentDir ?? '').replace(/^\/+|\/+$/g, '');
         for (const file of files) {
-            const fd = new FormData(); fd.append('file', file);
+            const base = file.name.replace(/\.[^.]+$/, '');
+            const def = dir ? `${dir}/${base}` : base;
+            const custom = prompt('保存路径（可带文件夹，如 test/test-001；留空用默认）', def);
+            if (custom === null) continue;
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('name', custom.trim() || def);
             const r = await run(() => api('POST', 'media', fd));
             if (r) out.push(r.item);
         }
@@ -329,32 +413,118 @@
 
     function mediaBrowser({ onPick, single }) {
         const wrapEl = h('div'), grid = h('div', { class: 'media-grid' });
-        let page = 1, q = '';
-        const search = h('input', { class: 'adm-search', placeholder: '搜索文件名' });
-        const fileIn = h('input', { type: 'file', accept: 'image/*', multiple: true, hidden: true, on: { change: async e => { await uploadFiles(e.target.files); e.target.value = ''; load(1); } } });
+        let page = 1, q = '', dir = '';
+        const checked = new Set();
+
+        const slugPath = s => String(s || '').toLowerCase()
+            .replace(/[^a-z0-9\u4e00-\u9fa5/]+/g, '-')
+            .replace(/\/+/g, '/').replace(/^-+|-+$/g, '');
+
+        const search = h('input', { class: 'adm-search', placeholder: '搜索文件名 / 路径' });
+        const fileIn = h('input', { type: 'file', accept: 'image/*', multiple: true, hidden: true });
+
+        // ---------- 自定义文件夹下拉 ----------
+        const dirMenu = h('details', { class: 'adm-menu' });
+        const dirSummary = h('summary', { class: 'btn btn-sm' }, '全部文件夹');
+        const dirList = h('div', { class: 'adm-menu-list' });
+        dirMenu.append(dirSummary, dirList);
+        document.addEventListener('click', e => { if (!dirMenu.contains(e.target)) dirMenu.open = false; });
+
+        const openDirs = folders => {
+            dirSummary.textContent = dir ? dir + '/' : '全部文件夹';
+            const opts = [['', '全部文件夹'], ...folders.map(f => [f, f + '/'])];
+            dirList.replaceChildren(...opts.map(([v, label]) =>
+                h('button', {
+                    class: 'adm-menu-item' + (v === dir ? ' on' : ''),
+                    type: 'button',
+                    on: { click: () => { dir = v; currentDir = v; dirMenu.open = false; checked.clear(); load(1); } },
+                }, label)));
+        };
+
+        // ---------- 工具栏按钮 ----------
+        const bulkBtn = h('button', { class: 'btn btn-sm btn-danger', type: 'button', hidden: true, on: { click: async () => {
+            if (!checked.size) return;
+            if (!confirm(`删除选中的 ${checked.size} 张图片？旧链接会失效。`)) return;
+            if (await run(() => api('POST', 'media/bulk', { ids: [...checked], action: 'delete' }), '已删除')) { checked.clear(); load(page); }
+        } } }, '批量删除');
+
+        const newDirBtn = h('button', { class: 'btn btn-sm', type: 'button', on: { click: async () => {
+            const name = prompt('新文件夹名（如 test）');
+            if (!name || !name.trim()) return;
+            if (await run(() => api('POST', 'media/dirs', { name }), '已创建')) { dir = slugPath(name); load(1); }
+        } } }, '新建文件夹');
+
+        const renameDirBtn = h('button', { class: 'btn btn-sm', type: 'button', hidden: true, on: { click: async () => {
+            const name = prompt(`把「${dir}/」重命名为`, dir);
+            if (!name || !name.trim()) return;
+            if (!confirm('目录下所有图片的 URL 都会改变，文章里的旧链接需手动替换。继续？')) return;
+            if (await run(() => api('PATCH', 'media/dirs/' + encodeURIComponent(dir), { name }), '已重命名')) { dir = slugPath(name); load(1); }
+        } } }, '重命名文件夹');
+
+        // ---------- 列表 ----------
         async function load(p) {
             page = p;
-            const d = await run(() => api('GET', `media?page=${page}&q=${encodeURIComponent(q)}`));
+            const d = await run(() => api('GET', `media?page=${page}&q=${encodeURIComponent(q)}&dir=${encodeURIComponent(dir)}`));
             if (!d) return;
-            grid.replaceChildren(...(d.items.length ? d.items.map(it => h('div', { class: 'media-card' },
-                h('img', { src: it.url, alt: it.name, loading: 'lazy', on: { click: () => window.open(it.url, '_blank') } }),
-                h('div', { class: 'info', title: it.name }, `${it.name} · ${fmtSize(it.size)}`),
-                h('div', { class: 'acts' },
-                    onPick ? h('button', { class: 'btn btn-sm btn-primary', type: 'button', on: { click: () => onPick([it]) } }, '选用') : null,
-                    h('button', { class: 'btn btn-sm', type: 'button', on: { click: () => copy(it.url) } }, '链接'),
-                    h('button', { class: 'btn btn-sm', type: 'button', on: { click: () => copy(`![${it.name.replace(/\.[^.]+$/, '')}](${it.url})`) } }, 'Markdown'),
-                    h('button', { class: 'btn btn-sm btn-danger', type: 'button', on: { click: async () => {
-                        if (!confirm('删除后，引用这张图的文章会失效。确定删除？')) return;
-                        if (await run(() => api('DELETE', 'media/' + it.id), '已删除')) load(page);
-                    } } }, '删除')))) : [h('p', { class: 'adm-empty' }, '还没有图片，点右上角上传，或把图片拖进来')]));
+
+            openDirs(d.folders || []);
+            renameDirBtn.hidden = !dir;
+            bulkBtn.hidden = checked.size === 0;
+            bulkBtn.textContent = checked.size ? `批量删除（${checked.size}）` : '批量删除';
+
+            grid.replaceChildren(...(d.items.length ? d.items.map(it => {
+                const folder = it.key.split('/').slice(0, -1).join('/');
+                const card = h('div', { class: 'media-card' + (checked.has(it.id) ? ' checked' : '') },
+                    h('label', { class: 'media-pick' },
+                        h('input', { type: 'checkbox', checked: checked.has(it.id), on: { change: e => {
+                            if (e.target.checked) checked.add(it.id); else checked.delete(it.id);
+                            card.classList.toggle('checked', e.target.checked);
+                            bulkBtn.hidden = checked.size === 0;
+                            bulkBtn.textContent = checked.size ? `批量删除（${checked.size}）` : '批量删除';
+                        } } })),
+                    h('img', { src: it.url, alt: it.name, loading: 'lazy', on: { click: () => window.open(it.url, '_blank') } }),
+                    h('div', { class: 'info', title: it.key },
+                        folder ? h('span', { class: 'tag' }, folder + '/') : null,
+                        ` ${it.name} · ${fmtSize(it.size)}`),
+                    h('div', { class: 'acts' },
+                        onPick ? h('button', { class: 'btn btn-sm btn-primary', type: 'button', on: { click: () => onPick([it]) } }, '选用') : null,
+                        h('button', { class: 'btn btn-sm', type: 'button', on: { click: () => copy(it.url) } }, '链接'),
+                        h('button', { class: 'btn btn-sm', type: 'button', on: { click: () => copy(`![${it.name.replace(/\.[^.]+$/, '')}](${it.url})`) } }, 'Markdown'),
+                        h('button', { class: 'btn btn-sm', type: 'button', on: { click: async () => {
+                            const val = prompt('新的路径（可改文件夹与文件名，会改变 URL）', it.key.replace(/\.[^.]+$/, ''));
+                            if (val === null) return;
+                            const key = val.trim();
+                            if (!key || key === it.key) return;
+                            if (!confirm('路径改变后旧链接会失效，继续？')) return;
+                            if (await run(() => api('PATCH', 'media/' + it.id, { key }), '已移动，URL 已更新')) load(page);
+                        } } }, '改名/移动'),
+                        h('button', { class: 'btn btn-sm btn-danger', type: 'button', on: { click: async () => {
+                            if (!confirm('删除后，引用这张图的文章会失效。确定删除？')) return;
+                            if (await run(() => api('DELETE', 'media/' + it.id), '已删除')) load(page);
+                        } } }, '删除')));
+                return card;
+            }) : [h('p', { class: 'adm-empty' }, dir ? `「${dir}/」里还没有图片` : '还没有图片，点右下角上传，或把图片拖进来')]));
+
             const old = $('.adm-pager', wrapEl); if (old) old.remove();
             const pg = pager(d.total, d.per, page, load); if (pg) wrapEl.append(pg);
         }
+
         let t; search.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { q = search.value.trim(); load(1); }, 250); });
+        fileIn.addEventListener('change', async e => { await uploadFiles(e.target.files, dir); e.target.value = ''; load(1); });
+
         wrapEl.addEventListener('dragover', e => { e.preventDefault(); wrapEl.classList.add('drop-on'); });
         wrapEl.addEventListener('dragleave', () => wrapEl.classList.remove('drop-on'));
-        wrapEl.addEventListener('drop', async e => { e.preventDefault(); wrapEl.classList.remove('drop-on'); const fs = [...e.dataTransfer.files].filter(x => x.type.startsWith('image/')); if (fs.length) { await uploadFiles(fs); load(1); } });
-        wrapEl.append(h('div', { class: 'adm-row', style: 'margin-bottom:12px' }, search, h('label', { class: 'btn btn-primary' }, '上传图片', fileIn)), grid);
+        wrapEl.addEventListener('drop', async e => {
+            e.preventDefault(); wrapEl.classList.remove('drop-on');
+            const fs = [...e.dataTransfer.files].filter(x => x.type.startsWith('image/'));
+            if (fs.length) { await uploadFiles(fs, dir); load(1); }
+        });
+
+        wrapEl.append(
+            h('div', { class: 'media-toolbar' }, search, dirMenu, newDirBtn, renameDirBtn, bulkBtn),
+            grid,
+            h('div', { class: 'media-foot' }, h('label', { class: 'btn btn-primary media-upload' }, '上传图片', fileIn)));
+
         load(1);
         return wrapEl;
     }
@@ -366,9 +536,10 @@
     }
 
     async function viewMedia(main) {
-        main.replaceChildren(h('div', { class: 'adm-top' }, h('h2', null, '媒体库')),
+        main.replaceChildren(
+            h('div', { class: 'adm-top' }, h('h2', null, '媒体库')),
             glass('adm-card', mediaBrowser({})),
-            h('p', { class: 'adm-muted' }, '图片存放在 Cloudflare R2，通过 /media/… 访问（长期缓存）。支持 jpg / png / gif / webp / avif / svg，单张默认 ≤ 10 MB。'));
+            h('p', { class: 'adm-muted' }, '图片存放在 Cloudflare R2，通过自定义域名或 /media/… 访问（长期缓存）。支持 jpg / png / gif / webp / avif / svg，单张默认 ≤ 10 MB。'));
     }
 
     // ================================================================ 评论

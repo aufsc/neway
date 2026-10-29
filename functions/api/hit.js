@@ -4,7 +4,7 @@
  *   GET  /api/hit?path=/xxx      → 只读取，不计数
  * 访客只记录浏览器里随机生成的匿名 ID，不含任何个人信息。
  */
-import { json, normPath, sameOrigin, ensureSchema } from "../_lib/common.js";
+import { json, normPath, sameOrigin, ensureSchema, recordGeo } from "../_lib/common.js";
 
 async function readStats(db, path) {
   const { results } = await db
@@ -43,6 +43,7 @@ export async function onRequest({ request, env }) {
         if (r.meta && r.meta.changes > 0) stmts.push(db.prepare(inc).bind("uv")); // 新访客
       }
       await db.batch(stmts);
+      await recordGeo(db, request, { path, kind: "hit" });
       return json(await readStats(db, path));
     }
 
