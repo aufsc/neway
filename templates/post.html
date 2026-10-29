@@ -166,7 +166,7 @@
     </div>
 {% endblock %}
 {% block scripts %}
-    <script>window.__SITE__ = {{ {'ownerName': SITE.owner_name, 'ownerAvatar': SITE.owner_avatar}|tojson }};</script>
+    <script>window.__SITE__ = {{ {'ownerName': SITE.owner_name, 'ownerAvatar': SITE.owner_avatar, 'ownerAvatarLight': SITE.owner_avatar_light}|tojson }};</script>
     <script src="/static/post.js" defer></script>
     <script src="/static/comments.js" defer></script>
 {% endblock %}
