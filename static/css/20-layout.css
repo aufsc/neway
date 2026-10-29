@@ -102,7 +102,7 @@
 /* ===== 页脚 ===== */
 .site-footer {
     display: flex; flex-direction: column; align-items: center; gap: 12px;
-    width: 100%; max-width: 960px; margin: 32px auto 0; padding: 32px 20px 40px;
+    width: 100%; max-width: 960px; margin: 16px auto 0; padding: 32px 20px 40px;
     text-align: center; color: var(--secondary-text); font-size: 0.85rem;
 }
 .footer-brand { display: flex; align-items: center; gap: 10px; color: var(--text-color); font-size: 1rem; }
