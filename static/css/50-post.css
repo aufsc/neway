@@ -66,7 +66,7 @@
 /* ===== 左：目录（居中浮动；超高时内部滚动） ===== */
 .post-toc { grid-area: toc; min-width: 0; height: 100%; }
 .post-toc-card {
-    position: sticky; top: 50vh; transform: translateY(-50%); width: 220px; max-height: 70vh; overflow-y: auto;
+    position: sticky; top: 50vh; transform: translateY(-50%); width: 220px; max-height: 40vh; overflow-y: auto;
     border-radius: var(--radius-lg); padding: 16px 10px;
 }
 .post-toc-card h2 { font-size: 1.05em; padding: 0 10px 10px; margin-bottom: 6px; border-bottom: 1px dashed var(--border-color); }
