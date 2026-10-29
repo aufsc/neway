@@ -1,9 +1,10 @@
 # 你好，new way
 cover: /static/cover-placeholder.svg
-2025-01-01
+2026-10-01
 随笔
 博客,new way,Markdown
 # 你好，new way
+
 这是一篇示例文章，用来检查排版、目录、代码高亮与检查列表。确认站点跑通后，删除它或把文件名改成以 `_` 开头即可变成草稿。
 
 ## 文章头部格式
