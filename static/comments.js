@@ -9,6 +9,10 @@
     const OWNER_NAME = CFG.ownerName || 'new';
     const OWNER_AVATAR = CFG.ownerAvatar || '';
 
+    const OWNER_AVATAR_LIGHT = CFG.ownerAvatarLight || OWNER_AVATAR;
+    const isDark = () => document.documentElement.dataset.theme === 'dark';
+    const ownerAvatarSrc = () => (isDark() ? OWNER_AVATAR : OWNER_AVATAR_LIGHT);
+
     const form = document.getElementById('commentForm');
     const list = document.getElementById('commentList');
     const empty = document.getElementById('commentEmpty');
@@ -122,9 +126,10 @@
         if (c.is_owner) {
             if (OWNER_AVATAR) {
                 const img = document.createElement('img');
-                img.src = OWNER_AVATAR;
+                img.src = ownerAvatarSrc();
                 img.alt = '';
                 img.loading = 'lazy';
+                img.dataset.ownerAvatar = '1';
                 avatar.append(img);
             } else {
                 avatar.textContent = OWNER_NAME.charAt(0);
@@ -337,6 +342,12 @@
         } finally {
             if (submit) { submit.disabled = false; submit.textContent = label || '发送'; }
         }
+    });
+    
+    document.addEventListener('themechange', () => {
+        list.querySelectorAll('img[data-owner-avatar]').forEach(img => {
+            img.src = ownerAvatarSrc();
+        });
     });
 
     load();
