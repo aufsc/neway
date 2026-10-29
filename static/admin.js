@@ -437,7 +437,7 @@
             page = p;
             const d = await run(() => api('GET', 'messages?page=' + p)); if (!d) return;
             list.replaceChildren(...(d.items.length ? d.items.map(m => h('div', { class: 'adm-item' },
-                h('div', null, h('div', { class: 't' }, m.subject || '（无主题）', ' ', m.mailed ? null : h('span', { class: 'tag warn' }, '未发出邮件')),
+                h('div', null, h('div', { class: 't' }, m.subject || '（无主题）', ' ', m.mailed ? null : h('span', { class: 'tag warn' }, '未通知')),
                     h('div', { class: 'm' }, h('span', null, m.name), h('span', null, m.email), h('span', null, fmtTime(m.created_at))),
                     h('div', { class: 'cm body', style: 'display:block' }, m.body)),
                 h('div', { class: 'adm-row' },
