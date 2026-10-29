@@ -1,7 +1,4 @@
-/* =====================================================================
-   75 管理后台打磨：工具栏 / 按钮 / 列表 / 统计 / 媒体库 / 编辑器 / 响应式
-   在 70-admin.css 之后加载，纯增量覆盖
-   ===================================================================== */
+/* 75 管理后台打磨：工具栏 / 按钮 / 列表 / 统计 / 媒体库 / 编辑器 / 响应式 */
 
 /* ---------- 顶部工具栏 ---------- */
 .adm-top { display: flex; align-items: center; gap: 10px 12px; flex-wrap: wrap; }
@@ -25,17 +22,10 @@
 
 /* ---------- 统计页：两列等宽、等高、内部滚动 ---------- */
 .stats-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: stretch; max-width: 1180px; }
-
-/* 卡片：固定高度 + 纵向 flex，标题固定、内容滚动 */
 .stats-grid > .adm-card { display: flex; flex-direction: column; height: min(62vh, 620px); min-height: 320px; overflow: hidden; }
-
 .stats-grid > .adm-card > h3 { flex: 0 0 auto; margin-bottom: 10px; }
-
-/* 内容区独立滚动 */
 .stats-grid > .adm-card > .geo-list,
 .stats-grid > .adm-card > .geo-groups { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 6px; }
-
-/* 细滚动条 */
 .stats-grid > .adm-card > .geo-list::-webkit-scrollbar,
 .stats-grid > .adm-card > .geo-groups::-webkit-scrollbar { width: 6px; }
 .stats-grid > .adm-card > .geo-list::-webkit-scrollbar-thumb,
@@ -43,15 +33,19 @@
 .stats-grid > .adm-card > .geo-list::-webkit-scrollbar-track,
 .stats-grid > .adm-card > .geo-groups::-webkit-scrollbar-track { background: transparent; }
 
-/* 国家行 / 城市分组保持原样 */
+/* 国家代码徽标：固定宽度，中文名对齐 */
+.geo-code { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 34px; height: 20px; border-radius: 6px; background: var(--accent-soft); color: var(--link-color); font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.04em; line-height: 1; }
+
+/* 国家行：名称 | 条形 | 数值 */
 .geo-list { display: flex; flex-direction: column; gap: 10px; }
 .geo-row { display: grid; grid-template-columns: minmax(96px, 170px) minmax(0, 1fr) 60px; gap: 12px; align-items: center; }
 .geo-name { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 0.9rem; }
 .geo-name .geo-cn { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .geo-track { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
-.geo-track > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+.geo-track > span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.3s ease; }
 .geo-val { font-family: var(--font-mono); font-size: 0.82rem; color: var(--secondary-text); text-align: right; }
 
+/* 城市按国家分组 */
 .geo-groups { display: flex; flex-direction: column; gap: 12px; }
 .geo-group { padding: 10px 12px; border-radius: 14px; background: var(--surface-2); }
 .geo-group-hd { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; }
@@ -59,6 +53,7 @@
 .geo-cities { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
 .geo-cities li { display: flex; justify-content: space-between; gap: 10px; font-size: 0.86rem; }
 .geo-cities li > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* 访问明细表 */
 .visit-table { display: flex; flex-direction: column; gap: 2px; max-height: 520px; overflow: auto; }
 .visit-row { display: grid; grid-template-columns: 132px 136px minmax(120px, 1fr) 56px minmax(100px, 1.2fr); gap: 12px; align-items: center; padding: 7px 8px; border-radius: 10px; font-size: 0.84rem; }
@@ -123,6 +118,7 @@
 /* ---------- 窄屏 ---------- */
 @media (max-width: 900px) {
     .stats-grid { grid-template-columns: 1fr; max-width: none; }
+    .stats-grid > .adm-card { height: auto; max-height: none; }
     .stats-grid > .adm-card > .geo-list,
     .stats-grid > .adm-card > .geo-groups { overflow: visible; padding-right: 0; }
 }
