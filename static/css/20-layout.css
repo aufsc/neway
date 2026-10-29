@@ -22,6 +22,10 @@
 .nav-btn:hover { color: var(--link-color); border-color: var(--accent-soft-border); }
 .nav-btn.active { color: #fff; font-weight: 600; background: var(--accent); border-color: var(--accent); box-shadow: 0 4px 14px rgba(79,107,255,0.35); }
 
+.theme-dark-only { display: none; }
+[data-theme="dark"] .theme-light-only { display: none; }
+[data-theme="dark"] .theme-dark-only { display: block; }
+
 .theme-toggle {
     width: 36px; height: 36px; border-radius: 50%; padding: 0; cursor: pointer; position: relative;
     display: flex; align-items: center; justify-content: center; transition: transform var(--transition-mid);
@@ -102,7 +106,7 @@
 /* ===== 页脚 ===== */
 .site-footer {
     display: flex; flex-direction: column; align-items: center; gap: 12px;
-    width: 100%; max-width: 960px; margin: 16px auto 0; padding: 32px 20px 40px;
+    width: 100%; max-width: 960px; margin: 32px auto 0; padding: 32px 20px 40px;
     text-align: center; color: var(--secondary-text); font-size: 0.85rem;
 }
 .footer-brand { display: flex; align-items: center; gap: 10px; color: var(--text-color); font-size: 1rem; }
