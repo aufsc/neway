@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}信息 - {{ SITE.name }}{% endblock %}
+{% block body %}
+    <div class="page-header"><h1>站点信息</h1><p>Version 1.0.0 · {{ SITE.name }}</p></div>
+    <div class="container">
+        <section class="section glass"><p>构建于 Python + Jinja2，部署在 Cloudflare Pages；评论、统计与留言由 Pages Functions + D1 提供。</p></section>
+    </div>
+{% endblock %}

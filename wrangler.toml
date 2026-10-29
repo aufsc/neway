@@ -1,0 +1,30 @@
+# Cloudflare Pages 配置（wrangler 4.x）。把 name / database_id 换成你自己的。
+name = "neway"
+pages_build_output_dir = "dist"
+compatibility_date = "2025-01-01"
+
+[[d1_databases]]
+binding = "DB"                         # 变量名必须叫 DB（functions 里用 env.DB）
+database_name = "blog-db"
+database_id = "ee01e62b-8d08-4843-a3d5-733538f4de5f"
+
+[[r2_buckets]]
+binding = "MEDIA"                      # 媒体库图片；变量名必须叫 MEDIA
+bucket_name = "blog-media"
+
+# 非敏感变量。敏感值（口令、API Key）不要写在这里，用 secret（见 DEPLOY.md 第 7 步）
+[vars]
+SITE_NAME = "new way"                  # 通知邮件里的站名
+OWNER_NAME = "newey"                     # 站主评论显示名
+# 注意：MAIL_FROM / NOTIFY_EMAIL / CONTACT_TO（你的真实邮箱）不要写在这里——仓库公开时会被爬取。
+# 请在 Cloudflare 的 Variables and Secrets 里以 Secret 类型添加（见 DEPLOY.md 第 12 章）。
+GITHUB_REPO = "aufsc/neway"      # 管理后台把文章提交到这个仓库
+GITHUB_BRANCH = "main"
+# POSTS_DIR = "posts"                  # 文章目录，默认 posts
+# COMMENT_MODERATION = "1"             # 游客评论先审后发
+# MEDIA_MAX_MB = "10"                  # 单张图片上限
+# CF_ACCOUNT_ID = "..."                # 可选：后台显示“构建中 / 已上线”
+# CF_PROJECT = "my-blog"
+# REPLY_NOTIFY = "0"                   # 设为 0 则不给被回复的访客发邮件
+# WEBHOOK_TYPE = "wecom"               # wecom | feishu | dingtalk | discord | json
+# TG_CHAT_ID = "123456789"             # Telegram 机器人通知的会话 ID

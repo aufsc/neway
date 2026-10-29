@@ -1,0 +1,9 @@
+dist/
+__pycache__/
+*.pyc
+.wrangler/
+.dev.vars
+local_api.sqlite3
+node_modules/
+.DS_Store
+.local/

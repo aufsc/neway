@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}关于本站 - {{ SITE.name }}{% endblock %}
+{% block body %}
+    <div class="hero">
+        <img src="{{ SITE.avatar }}" alt="头像" class="hero-avatar" width="112" height="112">
+        <h1>{{ SITE.name }}</h1>
+        <p class="hero-tagline">{{ SITE.description }}</p>
+        <div class="hero-tags"><span class="hero-tag">写作</span><span class="hero-tag">编程</span><span class="hero-tag">生活</span></div>
+    </div>
+    <div class="container">
+        <section class="section glass">
+            <h2 class="section-title"><span class="section-title-icon">{{ icon('user') }}</span>关于我</h2>
+            <p>你好，欢迎来到我的个人博客。我喜欢把学到的、做过的、想过的东西写下来，既是整理，也是和未来的自己对话。这里会不定期更新技术笔记、读书心得和生活随笔，也欢迎你通过「联系」页面和我交流。</p>
+        </section>
+        <section class="section glass">
+            <h2 class="section-title"><span class="section-title-icon">{{ icon('info') }}</span>关于本站</h2>
+            <p>本站是一个基于 Python 构建的轻量级静态博客，使用 Markdown 写作，支持明暗主题、文章目录、全文搜索、评论与访客统计，部署在 Cloudflare Pages + D1 上。</p>
+        </section>
+        <section class="section glass">
+            <h2 class="section-title"><span class="section-title-icon">{{ icon('code') }}</span>技术栈</h2>
+            <div class="tech-grid">
+                <span class="tech-badge"><span class="tech-badge-dot" style="background:#3b82f6"></span>Python / Jinja2</span>
+                <span class="tech-badge"><span class="tech-badge-dot" style="background:#f59e0b"></span>Mistune Markdown</span>
+                <span class="tech-badge"><span class="tech-badge-dot" style="background:#10b981"></span>Vanilla JS</span>
+                <span class="tech-badge"><span class="tech-badge-dot" style="background:#8b5cf6"></span>Cloudflare Pages Functions</span>
+                <span class="tech-badge"><span class="tech-badge-dot" style="background:#ec4899"></span>D1 (SQLite)</span>
+            </div>
+        </section>
+        <section class="section glass">
+            <h2 class="section-title"><span class="section-title-icon">{{ icon('cal') }}</span>更新历史</h2>
+            <div class="timeline">
+                <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-date">2025年</div><div class="timeline-title">博客正式上线</div><div class="timeline-desc">完成基本功能开发，支持 Markdown 渲染、目录导航与主题切换。</div></div>
+            </div>
+        </section>
+    </div>
+{% endblock %}

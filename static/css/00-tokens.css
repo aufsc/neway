@@ -1,0 +1,103 @@
+/* =====================================================================
+   00 设计令牌 · 重置 · 全站背景
+   配色：mist 雾蓝底 / way 蓝（主色）/ lagoon 湖青（点缀）/ ink 墨蓝（正文）
+   ===================================================================== */
+:root {
+    color-scheme: light;
+    --bg-color: #edf1fb;
+    --surface-2: #f2f5fc;                 /* 代码块 / 标签 / 输入框等内嵌底色 */
+    --card-bg: #ffffff;                   /* 文章正文等实心卡片 */
+    --text-color: #1b2340;
+    --secondary-text: #5d6786;
+    --border-color: rgba(60, 80, 140, 0.16);
+    --link-color: #3f5bef;
+    --accent: #4f6bff;
+    --accent-2: #1fb5c0;
+    --accent-soft: rgba(79, 107, 255, 0.10);
+    --accent-soft-border: rgba(79, 107, 255, 0.26);
+    --btn-hover: rgba(79, 107, 255, 0.08);
+    --focus-ring: rgba(79, 107, 255, 0.22);
+
+    /* 液体玻璃 */
+    --glass-bg: linear-gradient(135deg, rgba(255,255,255,0.68), rgba(255,255,255,0.36));
+    --glass-soft: rgba(255, 255, 255, 0.46);
+    --glass-edge: rgba(255, 255, 255, 0.55);
+    --glass-rim: rgba(255, 255, 255, 0.95);
+    --glass-sheen: rgba(255, 255, 255, 0.55);
+    --glass-shadow: 0 12px 36px rgba(40, 60, 130, 0.12), 0 2px 6px rgba(40, 60, 130, 0.06);
+    --glass-blur: blur(18px) saturate(1.7);
+    --field-bg: rgba(255, 255, 255, 0.6);
+    --bg-image: url("/static/bg-light.svg");
+
+    --transition-fast: 0.2s ease;
+    --transition-mid: 0.3s ease;
+    --radius-lg: 22px;
+    --radius-md: 14px;
+
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+                 "Microsoft YaHei", "Source Han Sans SC", "Noto Sans CJK SC", sans-serif;
+    --font-title: "Noto Serif SC", "Songti SC", "SimSun", "Source Han Serif SC", Georgia, serif;
+    --font-mono: "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", monospace;
+    --content-font-size: 16.5px;
+    --content-line-height: 1.85;
+}
+
+[data-theme="dark"] {
+    color-scheme: dark;
+    --bg-color: #0a0f1f;
+    --surface-2: #0f1730;
+    --card-bg: #121a31;
+    --text-color: #dbe4ff;
+    --secondary-text: #97a3c7;
+    --border-color: rgba(150, 170, 255, 0.16);
+    --link-color: #8aa2ff;
+    --accent: #7c96ff;
+    --accent-2: #3dd6d0;
+    --accent-soft: rgba(124, 150, 255, 0.14);
+    --accent-soft-border: rgba(124, 150, 255, 0.3);
+    --btn-hover: rgba(255, 255, 255, 0.07);
+    --focus-ring: rgba(124, 150, 255, 0.3);
+
+    --glass-bg: linear-gradient(135deg, rgba(34,44,84,0.62), rgba(14,20,44,0.46));
+    --glass-soft: rgba(30, 40, 78, 0.5);
+    --glass-edge: rgba(160, 180, 255, 0.16);
+    --glass-rim: rgba(190, 205, 255, 0.28);
+    --glass-sheen: rgba(150, 170, 255, 0.14);
+    --glass-shadow: 0 14px 40px rgba(0, 0, 0, 0.42), 0 2px 6px rgba(0, 0, 0, 0.3);
+    --field-bg: rgba(8, 12, 30, 0.45);
+    --bg-image: url("/static/bg-dark.svg");
+}
+
+/* ===== 重置 ===== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--bg-color); }
+html, body { max-width: 100%; min-height: 100vh; min-height: 100dvh; overflow-x: clip; }
+body {
+    color: var(--text-color);
+    font-family: var(--font-sans); font-size: 15px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+}
+/* 全站背景：new way 字标 + 极光，固定在视口，不随页面滚动 */
+body::before {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: var(--bg-image) center / cover no-repeat;
+}
+[hidden] { display: none !important; }
+a { color: inherit; }
+button { font: inherit; color: inherit; }
+img { max-width: 100%; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--secondary-text); }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.search-input:focus-visible { outline: none; }
+
+body.with-nav { padding-top: 84px; padding-bottom: 40px; }
+body.page-index { padding-top: 100px; padding-bottom: 20px; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

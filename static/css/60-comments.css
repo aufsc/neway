@@ -1,0 +1,74 @@
+/* =====================================================================
+   60 评论区（容器为玻璃；输入区用 --field-bg 保证可读）
+   ===================================================================== */
+.post-comments { grid-area: comments; min-width: 0; width: 100%; scroll-margin-top: 90px; border-radius: 30px; padding: 24px 32px 32px; }
+.post-comments h2 { font-family: var(--font-title); font-size: 1.15rem; margin-bottom: 16px; }
+
+.comment-form { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 14px; margin-bottom: 28px; width: 100%; }
+.cf-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--field-bg); border: 1px solid var(--border-color); color: var(--secondary-text); }
+.cf-avatar svg { width: 22px; height: 22px; }
+.cf-body { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+
+.cf-fields { display: flex; gap: 10px; flex-wrap: wrap; }
+.cf-field {
+    display: flex; align-items: center; flex: 1 1 150px; min-width: 0; overflow: hidden;
+    border: 1px solid var(--border-color); border-radius: 12px; background: var(--field-bg);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.cf-field:focus-within, .cf-editor:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-ring); }
+.cf-label { padding: 9px 12px; font-size: 0.82rem; color: var(--secondary-text); background: rgba(127,127,127,0.1); border-right: 1px solid var(--border-color); white-space: nowrap; }
+.cf-field input { flex: 1; min-width: 0; padding: 9px 12px; border: 0; background: transparent; color: var(--text-color); font: inherit; font-size: 0.92rem; outline: none; }
+.cf-field input::placeholder, .cf-editor textarea::placeholder { color: var(--secondary-text); opacity: 0.7; }
+
+.cf-editor { position: relative; border: 1px solid var(--border-color); border-radius: 14px; background: var(--field-bg); transition: border-color var(--transition-fast), box-shadow var(--transition-fast); }
+.cf-editor textarea { display: block; width: 100%; min-height: 110px; resize: vertical; padding: 12px 14px 34px; border: 0; background: transparent; color: var(--text-color); font: inherit; font-size: 0.95rem; line-height: 1.7; outline: none; }
+.cf-counter { position: absolute; right: 16px; bottom: 8px; font-family: var(--font-mono); font-size: 0.75rem; color: var(--secondary-text); pointer-events: none; }
+
+.cf-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding-right: 2px; }
+.cf-actions { display: flex; gap: 10px; }
+.cf-btn { padding: 8px 18px; font-size: 0.92rem; font-weight: 600; border-radius: 999px; cursor: pointer; transition: all 0.2s ease; }
+.cf-btn:hover { border-color: var(--accent-soft-border); color: var(--link-color); }
+.cf-btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 6px 16px rgba(79,107,255,0.35); }
+.cf-btn-primary:hover { opacity: 0.92; color: #fff; }
+.cf-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.cf-reply { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; border: 1px dashed var(--border-color); border-radius: 12px; background: var(--field-bg); font-size: 0.85rem; color: var(--secondary-text); }
+.cf-reply b { color: var(--link-color); font-weight: 600; }
+.cf-reply button { border: 0; background: transparent; color: var(--secondary-text); font-size: 0.82rem; cursor: pointer; }
+.cf-reply button:hover { color: var(--link-color); }
+.cf-preview { padding: 12px 14px; border: 1px dashed var(--border-color); border-radius: 14px; background: var(--field-bg); font-size: 0.92rem; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+
+.comment-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.comment-item { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; padding: 14px 16px; background: var(--field-bg); border: 1px solid var(--border-color); border-radius: 16px; }
+.comment-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; font-size: 0.95rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+.comment-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+.comment-content { min-width: 0; }
+.comment-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 8px; margin-bottom: 10px; border-bottom: 1px dashed var(--border-color); }
+.comment-name { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; min-width: 0; font-weight: 700; font-size: 0.95rem; }
+.comment-name a { color: var(--link-color); text-decoration: none; }
+.comment-name a:hover { text-decoration: underline; }
+.comment-owner { display: inline-block; padding: 1px 8px; font-size: 0.7rem; font-weight: 600; line-height: 1.7; color: #fff; background: var(--accent); border-radius: 999px; white-space: nowrap; }
+.comment-item.is-owner { border-color: var(--accent-soft-border); box-shadow: inset 0 0 0 1px var(--accent-soft); }
+.comment-reply-to { color: var(--link-color); font-weight: 500; margin-right: 6px; }
+.comment-time { font-size: 0.74rem; color: var(--secondary-text); font-family: var(--font-mono); flex-shrink: 0; opacity: 0.85; }
+.comment-body { font-size: 0.93rem; line-height: 1.75; white-space: pre-wrap; word-break: break-word; }
+.comment-foot { margin-top: 8px; display: flex; justify-content: flex-end; }
+.comment-reply-btn { border: 1px solid transparent; background: transparent; color: var(--secondary-text); font-size: 0.8rem; padding: 2px 10px; border-radius: 999px; cursor: pointer; transition: all 0.2s ease; }
+.comment-reply-btn:hover { color: var(--link-color); border-color: var(--border-color); }
+.comment-children { list-style: none; margin: 10px 0 0; padding: 0 0 0 16px; border-left: 1px dashed var(--border-color); display: flex; flex-direction: column; gap: 10px; }
+.comment-children .comment-item { padding: 12px 14px; background: var(--surface-2); }
+.comment-empty { margin-top: 16px; font-size: 0.88rem; color: var(--secondary-text); text-align: center; }
+
+@media (max-width: 1100px) {
+    .post-comments { padding: 20px 16px 24px; border-radius: 24px; }
+    .comment-form { grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px; }
+    .cf-avatar { display: none; }
+    .cf-fields { flex-direction: column; gap: 8px; }
+    .cf-field { flex: 1 1 auto; width: 100%; }
+    .cf-toolbar { justify-content: stretch; }
+    .cf-actions { width: 100%; }
+    .cf-actions .cf-btn { flex: 1 1 0; }
+    .comment-item { padding: 12px 14px; }
+    .comment-foot { justify-content: flex-start; }   /* 避开右下角悬浮按钮 */
+    .comment-children { padding-left: 12px; margin-top: 8px; }
+}

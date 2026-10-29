@@ -1,0 +1,27 @@
+# 方案 B（可选）：用 GitHub Actions 构建并直传 Cloudflare Pages。
+# 默认只能手动触发（Actions 页 → Run workflow），避免你用“Pages 连接 GitHub”方案时每次推送都白跑一次并报红。
+# 要启用自动部署：把下面的 on 改成 push 触发，并在仓库 Secrets 里配置 CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID。
+name: Deploy to Cloudflare Pages
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python build.py
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=my-blog --branch=main

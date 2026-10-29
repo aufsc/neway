@@ -1,0 +1,20 @@
+{
+  "name": "neway",
+  "domain": "neway.site",
+  "url": "https://neway.site",
+  "description": "记录生活、学习与折腾",
+  "logo": "/static/logo.svg",
+  "avatar": "/static/avatar.svg",
+  "email": "neway@neway.site",
+  "email_feedback": "feedback@neway.site",
+  "email_help": "help@neway.site",
+  "github": "https://github.com/aufsc",
+  "start_date": "2024-07-15",
+  "owner_name": "newey",
+  "owner_avatar": "/static/avatar.svg",
+  "author": {
+    "name": "newey",
+    "bio": "写代码，也写生活。把学到的、做过的、想过的，一条条记在这里。",
+    "motto": "new way, new day"
+  }
+}

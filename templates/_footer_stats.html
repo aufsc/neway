@@ -1,0 +1,20 @@
+{% from "_macros.html" import license %}
+<footer class="site-footer">
+        <div class="footer-brand">
+            <img class="footer-logo" src="{{ SITE.logo }}" alt="" width="28" height="28" loading="lazy">
+            <strong>{{ SITE.name }}</strong>
+        </div>
+        {% if SITE.description %}<p class="footer-desc">{{ SITE.description }}</p>{% endif %}
+
+        <!-- 访客统计（同域接口，取到数据才显示）+ 运行统计 -->
+        <ul class="footer-pills" aria-label="站点统计">
+            <li class="pill" data-stat="pv" hidden>访问量 <strong></strong></li>
+            <li class="pill" data-stat="uv" hidden>访客 <strong></strong></li>
+            <li class="pill">已运行 <strong id="runtime" data-start="{{ SITE.start_date }}">--</strong></li>
+        </ul>
+
+        <nav class="footer-links" aria-label="页脚导航">
+            <a href="/">首页</a><a href="/categories.html">分类</a><a href="/about.html">关于</a><a href="/contact.html">联系</a>{% if SITE.url %}<a href="/rss.xml">RSS</a>{% endif %}{% if SITE.github %}<a href="{{ SITE.github }}" target="_blank" rel="noopener noreferrer">GitHub</a>{% endif %}
+        </nav>
+        <p class="footer-copy">{{ license() }}</p>
+    </footer>
