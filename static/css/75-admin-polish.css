@@ -21,7 +21,7 @@
 .adm-stat:hover { transform: translateY(-2px); border-color: var(--accent-soft-border); }
 
 /* ---------- 统计页：两列等宽、等高、内部滚动 ---------- */
-.stats-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: stretch; max-width: 1180px; }
+.stats-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: stretch; max-width: none; }
 .stats-grid > .adm-card { display: flex; flex-direction: column; height: min(62vh, 620px); min-height: 320px; overflow: hidden; }
 .stats-grid > .adm-card > h3 { flex: 0 0 auto; margin-bottom: 10px; }
 .stats-grid > .adm-card > .geo-list,
