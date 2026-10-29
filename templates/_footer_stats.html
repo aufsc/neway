@@ -1,7 +1,8 @@
 {% from "_macros.html" import license %}
 <footer class="site-footer">
         <div class="footer-brand">
-            <img class="footer-logo" src="{{ SITE.logo }}" alt="" width="28" height="28" loading="lazy">
+            <img class="footer-logo theme-light-only" src="{{ SITE.logo_light or SITE.logo }}"alt="" width="28" height="28" loading="lazy">
+            <img class="footer-logo theme-dark-only" src="{{ SITE.logo }}"alt="" aria-hidden="true" width="28" height="28" loading="lazy">
             <strong>{{ SITE.name }}</strong>
         </div>
         {% if SITE.description %}<p class="footer-desc">{{ SITE.description }}</p>{% endif %}
