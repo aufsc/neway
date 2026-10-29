@@ -159,7 +159,7 @@
             }
             const badge = document.createElement('span');
             badge.className = 'comment-owner';
-            badge.textContent = 'newey';
+            badge.textContent = 'owner';
             badge.title = OWNER_NAME;
             name.append(badge);
         } else if (c.website) {
