@@ -38,7 +38,8 @@
                 <!-- 个人信息卡：头像 + 简介 + 站点统计 + 联系方式 -->
                 <section class="widget glass profile-card" aria-label="个人信息">
                     <div class="profile-head">
-                        <img class="profile-avatar" src="{{ SITE.avatar }}" alt="{{ SITE.author.name }}" width="72" height="72">
+                        <img class="profile-avatar theme-light-only" src="{{ SITE.avatar_light or SITE.avatar }}"alt="{{ SITE.author.name }}" width="72" height="72">
+                        <img class="profile-avatar theme-dark-only" src="{{ SITE.avatar }}"alt="" aria-hidden="true" width="72" height="72">
                         <div class="profile-id">
                             <h2 class="profile-name">{{ SITE.author.name }}</h2>
                             {% if SITE.author.motto %}<p class="profile-motto">{{ SITE.author.motto }}</p>{% endif %}
