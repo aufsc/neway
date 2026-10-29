@@ -16,9 +16,6 @@
     {% if SITE.url %}<link rel="alternate" type="application/rss+xml" title="{{ SITE.name }}" href="/rss.xml">{% endif %}
     <!-- 先于 CSS 应用主题，避免闪烁；无本地设置时跟随系统 -->
     <script>try{var t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&display=swap">
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="/static/pygments.css">
 </head>
