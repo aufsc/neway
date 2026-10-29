@@ -10,7 +10,7 @@
     display: flex; align-items: center; justify-content: space-between;
 }
 .nav-left { display: flex; align-items: center; }
-.logo-img { height: 40px; width: 40px; border-radius: 12px; object-fit: contain; display: block; box-shadow: 0 4px 14px rgba(79,107,255,0.3); transition: transform var(--transition-fast); }
+.logo-img { height: 40px; width: 40px; border-radius: 20px; object-fit: contain; display: block; box-shadow: 0 4px 14px rgba(79,107,255,0.3); transition: transform var(--transition-fast); }
 .nav-left a:hover .logo-img { transform: rotate(-6deg) scale(1.06); }
 .nav-right { display: flex; align-items: center; gap: 10px; }
 
