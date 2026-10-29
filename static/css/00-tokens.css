@@ -36,7 +36,7 @@
 
     --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
                  "Microsoft YaHei", "Source Han Sans SC", "Noto Sans CJK SC", sans-serif;
-    --font-title: "Songti SC", "STSong", "SimSun", "Noto Serif CJK SC", "Source Han Serif SC", "Songti TC", Georgia, serif;
+    --font-title: "Noto Serif SC", "Songti SC", "SimSun", "Source Han Serif SC", Georgia, serif;
     --font-mono: "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", monospace;
     --content-font-size: 16.5px;
     --content-line-height: 1.85;
