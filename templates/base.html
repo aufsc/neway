@@ -12,10 +12,14 @@
     <meta property="og:title" content="{{ self.title() }}">
     <meta property="og:description" content="{{ SITE.description }}">
     {% endblock %}
-    <link rel="icon" type="image/svg+xml" href="{{ SITE.logo }}">
+    <link rel="icon" type="image/svg+xml" href="{{ SITE.logo_light or SITE.logo }}" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/svg+xml" href="{{ SITE.logo }}" media="(prefers-color-scheme: dark)">
     {% if SITE.url %}<link rel="alternate" type="application/rss+xml" title="{{ SITE.name }}" href="/rss.xml">{% endif %}
     <!-- 先于 CSS 应用主题，避免闪烁；无本地设置时跟随系统 -->
     <script>try{var t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&display=swap">
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="/static/pygments.css">
 </head>
@@ -23,7 +27,7 @@
 {% block navbar %}
 {% set nav = [('index','/','首页'),('categories','/categories.html','分类'),('about','/about.html','关于'),('contact','/contact.html','联系')] %}
     <nav class="navbar glass">
-        <div class="nav-left"><a href="/" aria-label="首页"><img src="{{ SITE.logo }}" alt="{{ SITE.name }}" class="logo-img" width="40" height="40"></a></div>
+        <div class="nav-left"><a href="/" aria-label="首页"><img src="{{ SITE.logo_light or SITE.logo }}" alt="{{ SITE.name }}" class="logo-img theme-light-only" width="40" height="40"><img src="{{ SITE.logo }}" alt="" aria-hidden="true"class="logo-img theme-dark-only" width="40" height="40"></a></div>
         <div class="nav-right">
             {% block nav_extra %}{% endblock %}
             {% for key, href, label in nav %}<a href="{{ href }}" class="nav-btn{% if page == key %} active{% endif %}"{% if page == key %} aria-current="page"{% endif %}>{{ label }}</a>
