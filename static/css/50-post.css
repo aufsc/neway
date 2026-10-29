@@ -141,7 +141,7 @@
 @media (max-height: 820px) and (min-width: 1101px) { .post-side { position: static; } }   /* 矮视口：侧栏退回普通流 */
 
 @media (max-width: 1100px) {
-    .post-page { display: flex; flex-direction: column; gap: 16px; padding: 12px 12px 300px; }   /* 底部给悬浮按钮留位 */
+    .post-page { display: flex; flex-direction: column; gap: 16px; padding: 12px 12px 12px; }   /* 底部给悬浮按钮留位 */
     .post-toc { display: contents; }
     .post-main { order: 1; width: 100%; }
     .post-comments { order: 3; }
