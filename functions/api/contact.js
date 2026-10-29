@@ -53,10 +53,11 @@ export async function onRequest({ request, env }) {
       .run();
 
     const { mailed, bots } = await notifyMessage(env, { name, email, subject, body });
-    if (mailed) {
+    const notified = mailed || (Array.isArray(bots) && bots.length > 0);   // 任一渠道成功即算已通知
+    if (notified) {
       try { await db.prepare("UPDATE messages SET mailed = 1 WHERE id = ?").bind(r.meta.last_row_id).run(); } catch (e) {}
     }
-    if (!mailed && bots.length === 0) return json({ error: "mail not configured" }, 502);
+    if (!notified) return json({ error: "notify not configured" }, 502);
     return json({ ok: true, mailed, bots });
   } catch (e) {
     console.error("[api]", e && e.stack ? e.stack : e);   // 写入 Cloudflare 日志，便于线上排错
