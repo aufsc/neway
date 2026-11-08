@@ -104,7 +104,13 @@ function serveStatic(pathname, res) {
       return res.end(fs.readFileSync(f));
     }
   }
-  res.writeHead(404, { "content-type": "text/plain" }); res.end("not found");
+  const nf = path.join(DIST, "404.html");
+  if (fs.existsSync(nf)) {
+    res.writeHead(404, { "content-type": "text/html; charset=utf-8" });
+    return res.end(fs.readFileSync(nf));
+  }
+  res.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+  res.end("not found");
 }
 
 createServer(async (req, res) => {
