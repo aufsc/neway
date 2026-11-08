@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="new way"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1126"/><stop offset="1" stop-color="#15204a"/></linearGradient><linearGradient id="s" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8aa2ff"/><stop offset="1" stop-color="#3dd6d0"/></linearGradient></defs>
-<rect width="512" height="512" rx="118" ry="118" fill="url(#g)"/>
-<g fill="none" stroke="#8aa2ff" opacity=".35"><circle cx="256" cy="256" r="176" stroke-width="8"/><circle cx="256" cy="256" r="112" stroke-width="8" stroke-dasharray="16 32"/></g>
-<path d="M192 328 V184 L320 328 V184" fill="none" stroke="url(#s)" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="408" cy="176" r="28.8" fill="#3dd6d0"/></svg>
+<rect width="512" height="512" fill="url(#g)"/>
+<g fill="none" stroke="#8aa2ff" opacity=".32"><circle cx="256" cy="256" r="137" stroke-width="6"/><circle cx="256" cy="256" r="87" stroke-width="6" stroke-dasharray="12 24"/></g>
+<path d="M206 312 V200 L306 312 V200" fill="none" stroke="url(#s)" stroke-width="31" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="375" cy="194" r="22" fill="#3dd6d0"/></svg>
