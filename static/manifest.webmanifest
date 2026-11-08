@@ -9,7 +9,7 @@
   "theme_color": "#0a0f1f",
   "lang": "zh-CN",
   "icons": [
-    { "src": "/static/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "/static/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+    { "src": "/static/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/static/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
   ]
 }
