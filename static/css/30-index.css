@@ -1,95 +1,24 @@
 /* =====================================================================
-   30 首页：文章网格 · 个人信息卡 · 分类 · 词云
+   30 首页：主标题 · 文章网格 · 个人信息卡 · 分类 · 词云
    ===================================================================== */
 
-/* ===== 首页主标题「new way」艺术字 ===== */
+/* ===== 首页主标题：简单圆润字体（无渐变/描边/水印/动画） ===== */
 .page-index .page-title {
-    position: relative;
-    font-family: var(--font-title);
-    font-size: clamp(2.6rem, 6.4vw, 3.8rem);
+    margin: 0 0 40px;
+    text-align: center;
+    font-family: var(--font-rounded, "SF Pro Rounded", ui-rounded,
+        "Hiragino Maru Gothic ProN", "Quicksand", "Nunito",
+        "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif);
+    font-size: clamp(1.9rem, 4vw, 2.4rem);
     font-weight: 700;
-    font-style: italic;
-    line-height: 1.15;
+    line-height: 1.3;
     letter-spacing: 0.02em;
-    text-indent: 0.02em;
-    padding-bottom: 22px;
-
-    background: linear-gradient(100deg,
-        var(--accent) 0%,
-        var(--accent-2) 50%,
-        var(--accent) 100%);
-    background-size: 200% 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
-
-    filter: drop-shadow(0 8px 22px rgba(79, 107, 255, 0.24));
-    animation: title-sheen 9s ease-in-out infinite;
-}
-
-/* 上方小字 ARCHIVE */
-.page-index .page-title::before {
-    content: "ARCHIVE";
-    position: absolute;
-    left: 50%;
-    top: -0.85em;
-    transform: translateX(-50%);
-    font-family: var(--font-mono);
-    font-style: normal;
-    font-size: 0.62rem;
-    font-weight: 500;
-    letter-spacing: 0.44em;
-    text-indent: 0.44em;
-    color: var(--secondary-text);
-    -webkit-text-fill-color: var(--secondary-text);
-    opacity: 0.7;
+    color: var(--text-color);
     background: none;
+    -webkit-text-fill-color: currentColor;
     filter: none;
-}
-
-/* 下方渐变短线 */
-.page-index .page-title::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    bottom: 6px;
-    width: 108px;
-    height: 3px;
-    border-radius: 999px;
-    transform: translateX(-50%);
-    background: linear-gradient(90deg,
-        transparent,
-        var(--accent) 30%,
-        var(--accent-2) 70%,
-        transparent);
-}
-
-@keyframes title-sheen {
-    0%, 100% { background-position: 0% 50%; }
-    50%      { background-position: 100% 50%; }
-}
-
-[data-theme="dark"] .page-index .page-title {
-    filter: drop-shadow(0 8px 26px rgba(61, 214, 208, 0.24));
-}
-
-@media (max-width: 640px) {
-    .page-index .page-title {
-        font-size: 2.3rem;
-        padding-bottom: 18px;
-    }
-    .page-index .page-title::before {
-        font-size: 0.54rem;
-        letter-spacing: 0.32em;
-        text-indent: 0.32em;
-        top: -0.9em;
-    }
-    .page-index .page-title::after { width: 76px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .page-index .page-title { animation: none; }
+    animation: none;
+    text-transform: none;
 }
 
 /* ===== 页面骨架 ===== */
@@ -198,4 +127,11 @@
     .cat-list { flex-direction: row; flex-wrap: wrap; max-height: none; }
     .cat-item { width: auto; }
     .page-btn { width: 40px; height: 40px; }
+}
+
+@media (max-width: 640px) {
+    .page-index .page-title {
+        font-size: 1.7rem;
+        margin-bottom: 32px;
+    }
 }

@@ -73,17 +73,27 @@
 /* ===== 重置 ===== */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { background: var(--bg-color); }
-html, body { max-width: 100%; min-height: 100vh; min-height: 100dvh; overflow-x: clip; }
+html, body { max-width: 100%; min-height: 100vh; min-height: 100dvh; overflow-x: clip; overscroll-behavior-y: none; }
 body {
     color: var(--text-color);
     font-family: var(--font-sans); font-size: 15px; line-height: 1.6;
     -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
 }
 /* 全站背景：new way 字标 + 极光，固定在视口，不随页面滚动 */
+/* 全站背景：固定在视口，不随地址栏伸缩 */
 body::before {
-    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-    background: var(--bg-image) center / cover no-repeat;
+    content: "";
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100vh;      /* 旧浏览器回退 */
+    height: 100lvh;     /* 关键：最大视口高度，不随工具栏变化 */
+    z-index: -1;
+    pointer-events: none;
+    background: var(--bg-color) var(--bg-image) center / cover no-repeat;
 }
+
 [hidden] { display: none !important; }
 a { color: inherit; }
 button { font: inherit; color: inherit; }
@@ -102,4 +112,15 @@ body.page-index { padding-top: 100px; padding-bottom: 20px; }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+
+/* ===== 移动端背景：竖版构图，保证 N 完整可见 ===== */
+@media (max-width: 640px) {
+    [data-theme="light"] { --bg-image: url("/static/bg-light-m.svg"); }
+    [data-theme="dark"]  { --bg-image: url("/static/bg-dark-m.svg"); }
+
+    body::before {
+        background-size: contain;      /* 完整显示，不裁切 */
+        background-position: center;   /* 居中 */
+    }
 }
