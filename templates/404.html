@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}404 - {{ SITE.name }}{% endblock %}
+{% block description %}页面不存在，即将返回首页。{% endblock %}
+{% block meta %}
+<meta name="robots" content="noindex">
+{{ super() }}
+{% endblock %}
+{# 去掉导航栏与页面内边距，让 404 直接铺在背景上 #}
+{% block navbar %}{% endblock %}
+{% block body_class %}error-body{% endblock %}
+{% block body %}
+<main class="error-standalone">
+    <div class="error-standalone-code" aria-hidden="true">404</div>
+    <p class="error-standalone-text">
+        页面不存在，<span id="err-count">3</span> 秒后返回首页
+    </p>
+    <a class="error-standalone-link" href="/">立即返回</a>
+</main>
+<script>
+(function () {
+    var total = 5;
+    var left = total;
+    var el = document.getElementById('err-count');
+    var timer = setInterval(function () {
+        left -= 1;
+        if (el) el.textContent = Math.max(left, 0);
+        if (left <= 0) {
+            clearInterval(timer);
+            location.replace('/');
+        }
+    }, 1000);
+})();
+</script>
+<noscript><meta http-equiv="refresh" content="3;url=/"></noscript>
+{% endblock %}
