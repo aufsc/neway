@@ -1,0 +1,65 @@
+/* 48 · 404 页面（纯背景，无卡片） */
+
+.error-body { padding: 0 !important; }
+
+.error-standalone {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 24px;
+    text-align: center;
+}
+
+/* 巨大 404，直接压在背景图上 */
+.error-standalone-code {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: clamp(110px, 22vw, 240px);
+    line-height: 0.86;
+    letter-spacing: -0.06em;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 18px 46px rgba(79, 107, 255, 0.32));
+    user-select: none;
+    pointer-events: none;
+}
+
+.error-standalone-text {
+    margin: 0;
+    color: var(--secondary-text);
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+}
+
+#err-count {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.error-standalone-link {
+    color: var(--secondary-text);
+    font-size: 0.85rem;
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 1px;
+    transition: color 0.18s ease;
+}
+.error-standalone-link:hover { color: var(--link-color); }
+
+@media (max-width: 640px) {
+    .error-standalone { gap: 12px; }
+    .error-standalone-code { font-size: clamp(96px, 34vw, 160px); }
+    .error-standalone-text { font-size: 0.88rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .error-standalone-link { transition: none; }
+}
