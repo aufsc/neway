@@ -5,29 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>{% block title %}{{ SITE.name }}{% endblock %}</title>
     <meta name="description" content="{% block description %}{{ SITE.description }}{% endblock %}">
-    <meta name="theme-color" content="#edf1fb">
+    <meta name="theme-color" content="#edf1fb" id="themeColor">
     {% block meta %}
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="{{ SITE.name }}">
     <meta property="og:title" content="{{ self.title() }}">
     <meta property="og:description" content="{{ SITE.description }}">
+    {% if SITE.url %}<link rel="canonical" href="{{ SITE.url }}{{ page_url or '/' }}">{% endif %}
     {% endblock %}
     <link rel="icon" type="image/svg+xml" href="{{ SITE.logo_light or SITE.logo }}" media="(prefers-color-scheme: light)">
     <link rel="icon" type="image/svg+xml" href="{{ SITE.logo }}" media="(prefers-color-scheme: dark)">
+    <link rel="manifest" href="/static/manifest.webmanifest">
     {% if SITE.url %}<link rel="alternate" type="application/rss+xml" title="{{ SITE.name }}" href="/rss.xml">{% endif %}
-    <!-- 先于 CSS 应用主题，避免闪烁；无本地设置时跟随系统 -->
     <script>try{var t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&display=swap">
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="/static/pygments.css">
+    <link rel="stylesheet" href="/static/style.css?v={{ ASSET_V }}">
+    <link rel="stylesheet" href="/static/pygments.css?v={{ ASSET_V }}">
 </head>
 <body class="{% block body_class %}with-nav{% endblock %}">
 {% block navbar %}
 {% set nav = [('index','/','首页'),('categories','/categories.html','分类'),('about','/about.html','关于'),('contact','/contact.html','联系')] %}
     <nav class="navbar glass">
-        <div class="nav-left"><a href="/" aria-label="首页"><img src="{{ SITE.logo_light or SITE.logo }}" alt="{{ SITE.name }}" class="logo-img theme-light-only" width="40" height="40"><img src="{{ SITE.logo }}" alt="" aria-hidden="true"class="logo-img theme-dark-only" width="40" height="40"></a></div>
+        <div class="nav-left"><a href="/" aria-label="首页"><img src="{{ SITE.logo_light or SITE.logo }}" alt="{{ SITE.name }}" class="logo-img theme-light-only" width="40" height="40"><img src="{{ SITE.logo }}" alt="" aria-hidden="true" class="logo-img theme-dark-only" width="40" height="40"></a></div>
         <div class="nav-right">
             {% block nav_extra %}{% endblock %}
             {% for key, href, label in nav %}<a href="{{ href }}" class="nav-btn{% if page == key %} active{% endif %}"{% if page == key %} aria-current="page"{% endif %}>{{ label }}</a>
@@ -47,7 +45,7 @@
 {% block footer %}
 {% include "_footer_stats.html" %}
 {% endblock %}
-    <script src="/static/main.js" defer></script>
+    <script src="/static/main.js?v={{ ASSET_V }}" defer></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

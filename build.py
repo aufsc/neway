@@ -3,7 +3,7 @@
 
 目录约定（均相对于本文件所在目录）：
     posts/        Markdown 文章，文件名以 _ 开头的视为草稿，不发布
-    templates/    base / index / post / about / categories / contact / info .html
+    templates/    base / index / post / about / categories / contact / info / 404 .html
     static/       main.js、index.js、post.js、svg 等，原样复制到 dist/static
     static/css/   样式分模块存放，构建时按文件名顺序合并为 dist/static/style.css
     site.json     站点配置（名称、域名、邮箱、作者卡片等）
@@ -21,6 +21,7 @@
 
 可选依赖：pygments（代码高亮）。未安装时代码块按普通样式输出。
 """
+import hashlib
 import html
 import json
 import math
@@ -44,8 +45,19 @@ try:
 except ImportError:
     HAS_PYGMENTS = False
 
-# ------------------------------------------------------------------ 站点配置
+
+# ------------------------------------------------------------------ 路径与站点配置
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+POSTS_DIR = os.path.join(BASE_DIR, "posts")
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+CSS_DIR = os.path.join(STATIC_DIR, "css")
+DIST_DIR = os.path.join(BASE_DIR, "dist")
+CATEGORIES_MD = os.path.join(BASE_DIR, "categories.md")
+
+PAGES = ["about", "categories", "info", "contact"]
+UNCATEGORIZED = "未分类"
+EXCERPT_LEN = 120
 
 
 def load_site():
@@ -65,16 +77,30 @@ def load_site():
 
 SITE = load_site()
 
-POSTS_DIR = os.path.join(BASE_DIR, "posts")
-TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
-STATIC_DIR = os.path.join(BASE_DIR, "static")
-CSS_DIR = os.path.join(STATIC_DIR, "css")
-DIST_DIR = os.path.join(BASE_DIR, "dist")
-CATEGORIES_MD = os.path.join(BASE_DIR, "categories.md")
 
-PAGES = ["about", "categories", "info", "contact"]
-UNCATEGORIZED = "未分类"
-EXCERPT_LEN = 120
+# ------------------------------------------------------------------ 资源版本
+def asset_version():
+    """对 dist/static 全量求哈希，用作 ?v= 缓存戳与 SW 版本号。"""
+    h = hashlib.sha1()
+    base = os.path.join(DIST_DIR, "static")
+    for root, _, files in os.walk(base):
+        for name in sorted(files):
+            p = os.path.join(root, name)
+            h.update(os.path.relpath(p, base).replace("\\", "/").encode("utf-8"))
+            with open(p, "rb") as f:
+                h.update(f.read())
+    return h.hexdigest()[:8]
+
+
+def stamp_sw(version):
+    """把 dist/static/sw.js 里的 __SW_VERSION__ 换成构建版本号。"""
+    sw = os.path.join(DIST_DIR, "static", "sw.js")
+    if not os.path.exists(sw):
+        return
+    with open(sw, encoding="utf-8") as f:
+        code = f.read()
+    with open(sw, "w", encoding="utf-8") as f:
+        f.write(code.replace("__SW_VERSION__", version))
 
 
 # ------------------------------------------------------------------ Markdown
@@ -365,31 +391,60 @@ def write(path, text):
         f.write(text)
 
 
+HEADERS = """\
+/static/sw.js
+  Service-Worker-Allowed: /
+  Cache-Control: no-cache
+
+/static/manifest.webmanifest
+  Content-Type: application/manifest+json
+
+/static/*
+  Cache-Control: public, max-age=31536000, immutable
+  X-Content-Type-Options: nosniff
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+  X-Frame-Options: SAMEORIGIN
+"""
+
+
 def build():
     if os.path.exists(DIST_DIR):
         shutil.rmtree(DIST_DIR)
     os.makedirs(os.path.join(DIST_DIR, "post"), exist_ok=True)
 
+    # 静态资源 → dist/static（css 目录单独合并，不直接复制）
     if os.path.isdir(STATIC_DIR):
-        shutil.copytree(STATIC_DIR, os.path.join(DIST_DIR, "static"), ignore=shutil.ignore_patterns("css", "themes"))
+        shutil.copytree(STATIC_DIR, os.path.join(DIST_DIR, "static"),
+                        ignore=shutil.ignore_patterns("css", "themes"))
     write(os.path.join(DIST_DIR, "static", "style.css"), bundle_css())
     write(os.path.join(DIST_DIR, "static", "pygments.css"), pygments_css())
+
+    # 资源版本号：必须在 css 写完之后算
+    ASSET_V = asset_version()
+    stamp_sw(ASSET_V)
 
     env = Environment(loader=FileSystemLoader(TEMPLATES_DIR),
                       autoescape=select_autoescape(["html", "xml"]))
     env.globals["SITE"] = SITE
     env.globals["now_year"] = datetime.now().year
+    env.globals["ASSET_V"] = ASSET_V
+    env.globals["page_url"] = "/"
+
     posts = get_posts()
 
     # 1. 首页
     write(os.path.join(DIST_DIR, "index.html"),
-          env.get_template("index.html").render(page="index", posts=posts, **index_context(posts)))
+          env.get_template("index.html").render(page="index", page_url="/", posts=posts, **index_context(posts)))
 
     # 2. 文章页
     post_tpl = env.get_template("post.html")
     for p in posts:
         write(os.path.join(DIST_DIR, "post", post_out_name(p["filename"])),
-              post_tpl.render(page="post", **p))
+              post_tpl.render(page="post", page_url=p["url"], **p))
 
     # 3. 独立页面
     built = 0
@@ -399,7 +454,7 @@ def build():
         except TemplateNotFound:
             print(f"⚠️  跳过：缺少模板 {page}.html")
             continue
-        ctx = {"page": page, "title": page.capitalize(), "posts": posts}
+        ctx = {"page": page, "page_url": f"/{page}.html", "title": page.capitalize(), "posts": posts}
         if page == "categories":
             ctx["categories"] = get_categories(posts)
         write(os.path.join(DIST_DIR, f"{page}.html"), tpl.render(**ctx))
@@ -407,18 +462,19 @@ def build():
 
     # 4. 管理后台（单页应用，不进 sitemap，禁止收录）
     try:
-        write(os.path.join(DIST_DIR, "admin.html"), env.get_template("admin.html").render(page="admin"))
+        write(os.path.join(DIST_DIR, "admin.html"),
+              env.get_template("admin.html").render(page="admin", page_url="/admin"))
     except TemplateNotFound:
         pass
 
-     # 4.5 404 页面（Cloudflare Pages 对未知路径自动返回它）
+    # 5. 404（Cloudflare Pages 对未知路径自动返回它）
     try:
         write(os.path.join(DIST_DIR, "404.html"),
               env.get_template("404.html").render(page="404", posts=posts))
     except TemplateNotFound:
         print("⚠️  跳过：缺少模板 404.html")
-        
-    # 5. SEO 文件（需要在 SITE["url"] 里配置站点地址）
+
+    # 6. SEO 文件（需要在 SITE["url"] 里配置站点地址）
     robots = "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\n"
     if SITE["url"]:
         write(os.path.join(DIST_DIR, "sitemap.xml"), build_sitemap(posts))
@@ -426,7 +482,10 @@ def build():
         robots += f"Sitemap: {SITE['url'].rstrip('/')}/sitemap.xml\n"
     write(os.path.join(DIST_DIR, "robots.txt"), robots)
 
-    print(f"✅ Build complete! {len(posts)} posts + {built} pages → {os.path.relpath(DIST_DIR)}/")
+    # 7. 响应头（长缓存 + 安全头 + SW 作用域）
+    write(os.path.join(DIST_DIR, "_headers"), HEADERS)
+
+    print(f"✅ Build complete! {len(posts)} posts + {built} pages → {os.path.relpath(DIST_DIR)}/  (v={ASSET_V})")
     if not HAS_PYGMENTS:
         print("ℹ️  未安装 pygments，代码块不会高亮（pip install pygments）")
 

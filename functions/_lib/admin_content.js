@@ -216,7 +216,13 @@ export async function media({ request, env, admin, parts }) {
       key = `${prefix}${base}-${n}.${ext}`;
     }
 
-    await env.MEDIA.put(key, await file.arrayBuffer(), { httpMetadata: { contentType: type } });
+    await env.MEDIA.put(key, await file.arrayBuffer(), {
+      httpMetadata: {
+        contentType: type,
+        cacheControl: "public, max-age=31536000, immutable",
+      },
+    });
+
     const display = `${base}.${ext}`;
     const r = await db.prepare("INSERT INTO media (key, name, type, size, created_at, admin_id) VALUES (?, ?, ?, ?, ?, ?)")
       .bind(key, display, type, file.size, Date.now(), admin.id).run();

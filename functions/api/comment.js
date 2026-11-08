@@ -10,7 +10,8 @@
  * 管理：status 0 公开 / 1 隐藏 / 2 待审核（COMMENT_MODERATION=1 时游客评论先审后发）；黑名单命中返回 403。
  */
 import {
-  json, normPath, cleanMail, cleanSite, secretEquals, sameOrigin, ipHashOf, ensureSchema, isBlocked, NAME_MAX, recordGeo } from "../_lib/common.js";
+  json, normPath, cleanMail, cleanSite, secretEquals, sameOrigin, ipHashOf, ensureSchema, isBlocked, NAME_MAX, recordGeo
+} from "../_lib/common.js";
 import { notifyComment } from "../_lib/notify.js";
 
 const BODY_MAX = 2000;
@@ -89,9 +90,9 @@ export async function onRequest({ request, env, waitUntil }) {
           if (parent.parent_id) parentId = parent.parent_id;
           target = replyTo
             ? await db
-                .prepare("SELECT name, email FROM comments WHERE (id = ? OR parent_id = ?) AND name = ? AND email != '' ORDER BY id DESC LIMIT 1")
-                .bind(parentId, parentId, replyTo)
-                .first()
+              .prepare("SELECT name, email FROM comments WHERE (id = ? OR parent_id = ?) AND name = ? AND email != '' ORDER BY id DESC LIMIT 1")
+              .bind(parentId, parentId, replyTo)
+              .first()
             : parent;
         }
       }
@@ -115,7 +116,9 @@ export async function onRequest({ request, env, waitUntil }) {
         .bind(path, name, body, now, ipHash, email, website, parentId, replyTo, isOwner, status)
         .run();
 
-      await recordGeo(db, request, { path, kind: "comment" });
+      const geoJob = recordGeo(db, request, { path, kind: "comment" });
+      if (typeof waitUntil === "function") waitUntil(geoJob);
+      else await geoJob;
 
       // 异步通知：不拖慢响应，失败也不影响评论
       const job = notifyComment(env, url.origin, { path, name, body, email, replyTo, isOwner, pending: status === 2 }, status === 2 ? null : target);

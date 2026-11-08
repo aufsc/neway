@@ -15,7 +15,7 @@ async function readStats(db, path) {
   return { pv: m.pv || 0, uv: m.uv || 0, page_pv: m["p:" + path] || 0 };
 }
 
-export async function onRequest({ request, env }) {
+export async function onRequest({ request, env, waitUntil }) {
   const db = env.DB;
   if (!db) return json({ error: "未绑定 D1 数据库（变量名需为 DB）" }, 500);
   if (!sameOrigin(request)) return json({ error: "forbidden" }, 403);
@@ -43,7 +43,12 @@ export async function onRequest({ request, env }) {
         if (r.meta && r.meta.changes > 0) stmts.push(db.prepare(inc).bind("uv")); // 新访客
       }
       await db.batch(stmts);
-      await recordGeo(db, request, { path, kind: "hit" });
+
+      // 归属地统计放到响应之后执行，不拖慢 /api/hit
+      const geoJob = recordGeo(db, request, { path, kind: "hit" });
+      if (typeof waitUntil === "function") waitUntil(geoJob);
+      else await geoJob;
+
       return json(await readStats(db, path));
     }
 

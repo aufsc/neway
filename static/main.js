@@ -1,26 +1,34 @@
-/* 所有页面共用：主题切换 / 年份 / 移动端菜单 / 分类折叠 / 访问统计 */
+/* 所有页面共用：主题切换 / 年份 / 移动端菜单 / 分类折叠 / 访问统计 / SW 注册 */
 (() => {
     const root = document.documentElement;
+
+    const THEME_COLORS = { light: '#edf1fb', dark: '#0a0f1f' };
+    const isAdmin = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
+
+    function syncThemeColor() {
+        const meta = document.getElementById('themeColor');
+        if (meta) meta.setAttribute('content', THEME_COLORS[root.dataset.theme] || THEME_COLORS.light);
+    }
+    syncThemeColor();
 
     function toggleTheme() {
         const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
         root.dataset.theme = next;
         try { localStorage.setItem('theme', next); } catch (e) {}
+        syncThemeColor();
         document.dispatchEvent(new CustomEvent('themechange', { detail: next }));
     }
     document.querySelectorAll('.theme-toggle').forEach(b => b.addEventListener('click', toggleTheme));
 
     document.querySelectorAll('[data-year]').forEach(el => { el.textContent = new Date().getFullYear(); });
 
-    // 运行时间
     const runtime = document.getElementById('runtime');
     if (runtime && runtime.dataset.start) {
         const days = Math.floor((Date.now() - new Date(runtime.dataset.start + 'T00:00:00')) / 86400000);
         runtime.textContent = `${days} 天`;
     }
 
-    // 访问统计：同域接口 /api/hit（Cloudflare Pages Function + D1）
-    // 取到数据才显示，失败保持隐藏；同一会话同一路径只计一次
+    // 访问统计
     const statEls = Array.from(document.querySelectorAll('[data-stat]'));
     if (statEls.length) {
         const safe = fn => { try { return fn(); } catch (e) { return null; } };
@@ -56,10 +64,9 @@
                     }
                 });
             })
-            .catch(() => { /* 本地静态预览或未绑定 D1：保持隐藏 */ });
+            .catch(() => {});
     }
 
-    // 移动端菜单
     const hamburger = document.getElementById('hamburger-btn');
     const menu = document.getElementById('mobile-menu');
     if (hamburger && menu) {
@@ -75,16 +82,21 @@
         document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
     }
 
-    // 分类列表展开高度
     document.querySelectorAll('.article-list[data-count]').forEach(ul => {
         ul.style.maxHeight = ul.dataset.count * 60 + 'px';
     });
 
-    // 分类折叠
     document.addEventListener('click', e => {
         const head = e.target.closest('.category-header');
         if (!head) return;
         const block = head.parentElement;
         head.setAttribute('aria-expanded', String(block.classList.toggle('collapsed') === false));
     });
+
+    // Service Worker（只在生产环境、非后台注册）
+    if ('serviceWorker' in navigator && !isAdmin && location.protocol === 'https:') {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/static/sw.js', { scope: '/' }).catch(() => {});
+        });
+    }
 })();
