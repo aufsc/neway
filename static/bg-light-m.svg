@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1600" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="ink" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f6bff"/><stop offset="1" stop-color="#1fb5c0"/></linearGradient><pattern id="ln" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0 V40" stroke="#4f6bff" stroke-opacity=".08" stroke-width="1"/></pattern></defs>
 <rect width="900" height="1600" fill="#edf1fb"/>
 <rect width="900" height="1600" fill="url(#ln)"/>
-<g fill="none" stroke="url(#ink)" stroke-linecap="round" stroke-linejoin="round" opacity="0.20" transform="translate(135 450) scale(9 7)" stroke-width="20"><path d="M0 100 L0 0 L70 100 L70 0"/></g>
+<g fill="none" stroke="url(#ink)" stroke-linecap="round" stroke-linejoin="round" opacity="0.20" transform="translate(135 450) scale(9 7)" stroke-width="22"><path d="M0 100 L0 0 L70 100 L70 0"/></g>
 <circle cx="120" cy="1380" r="6" fill="#4f6bff" opacity=".5"/><path d="M120 1380 C 260 1270, 380 1460, 540 1320" fill="none" stroke="#4f6bff" stroke-width="2" stroke-dasharray="3 10" opacity=".4"/></svg>
