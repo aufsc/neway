@@ -411,6 +411,13 @@ def build():
     except TemplateNotFound:
         pass
 
+     # 4.5 404 页面（Cloudflare Pages 对未知路径自动返回它）
+    try:
+        write(os.path.join(DIST_DIR, "404.html"),
+              env.get_template("404.html").render(page="404", posts=posts))
+    except TemplateNotFound:
+        print("⚠️  跳过：缺少模板 404.html")
+        
     # 5. SEO 文件（需要在 SITE["url"] 里配置站点地址）
     robots = "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\n"
     if SITE["url"]:
